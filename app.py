@@ -28,6 +28,33 @@ import gradio as gr
 import pandas as pd
 
 # --------------------------------------------------------------------------- #
+# gradio_client monkey-patch
+# gr.State(dict) 가 만드는 {additionalProperties: True} 스키마에서
+# gradio_client.utils 가 bool 입력을 못 다루는 알려진 버그를 우회한다.
+# (TypeError: argument of type 'bool' is not iterable)
+# --------------------------------------------------------------------------- #
+try:
+    import gradio_client.utils as _gc_utils
+
+    _orig_get_type = _gc_utils.get_type
+    _orig_jsts = _gc_utils._json_schema_to_python_type
+
+    def _safe_get_type(schema):
+        if isinstance(schema, bool):
+            return "Any"
+        return _orig_get_type(schema)
+
+    def _safe_jsts(schema, defs=None):
+        if isinstance(schema, bool):
+            return "Any"
+        return _orig_jsts(schema, defs)
+
+    _gc_utils.get_type = _safe_get_type
+    _gc_utils._json_schema_to_python_type = _safe_jsts
+except Exception:
+    pass
+
+# --------------------------------------------------------------------------- #
 # 환경 / 경로 설정
 # --------------------------------------------------------------------------- #
 
@@ -456,11 +483,11 @@ def build_audio_state(stim: dict) -> tuple[Optional[str], str]:
 
 
 def start_evaluation(
-    participant_id: str,
-    participant_group: str,
-    block_choice: str,
-    consent: bool,
-    state: dict,
+    participant_id,
+    participant_group,
+    block_choice,
+    consent,
+    state,
 ):
     """동의/설정 화면 -> 평가 화면."""
     pid = (participant_id or "").strip()
@@ -509,7 +536,7 @@ def start_evaluation(
     )
 
 
-def _no_advance(state: dict):
+def _no_advance(state):
     """검증 실패 시 화면 유지."""
     return (
         state,
@@ -530,14 +557,14 @@ def _no_advance(state: dict):
     )
 
 
-def mark_audio_played(state: dict):
+def mark_audio_played(state):
     s = state_from_dict(state)
     s.audio_play_count += 1
     return s.__dict__, f"음성 재생 횟수: {s.audio_play_count}"
 
 
 def submit_response(
-    state: dict,
+    state,
     q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13,
     good_expr, awkward_expr, improvement,
 ):
@@ -637,7 +664,7 @@ def submit_response(
     )
 
 
-def submit_global(state: dict, g1, g2, g3, g4):
+def submit_global(state, g1, g2, g3, g4):
     s = state_from_dict(state)
     global_row = {
         "participant_id": s.participant_id,
