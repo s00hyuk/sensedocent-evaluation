@@ -43,6 +43,7 @@ license: mit
 │   ├── sensedocent_validation_summary_v7_final.csv        # 검증 요약 (선택)
 │   └── sensedocent_fact_check_log_v7.csv                  # 팩트체크 로그 (선택, 비공개)
 ├── audio/                  # *.mp3 평가용 TTS 음성 파일
+├── images/                 # <artwork_id>.jpg|png|webp 작품 이미지 (선택)
 └── responses/              # 자동 생성. 평가 결과 CSV 저장
     ├── sensedocent_responses.csv
     └── sensedocent_global_feedback.csv
@@ -100,7 +101,9 @@ DEBUG_MODE=true python app.py
 
 > 컬럼명이 살짝 달라도 동작하도록 alias 처리되어 있습니다 (예: `artist_ko ↔ artist`).
 
-## 7. 오디오 파일 준비 방법
+## 7. 오디오 / 이미지 파일 준비 방법
+
+### 오디오 (`audio/`)
 
 1. CSV 의 `audio_file_suggested` 컬럼 값과 동일한 파일명을 `audio/` 폴더에 저장합니다.
    예: `audio/GOGH_001_caption.mp3`, `audio/GOGH_001_sensedocent.mp3` …
@@ -108,6 +111,16 @@ DEBUG_MODE=true python app.py
 3. 누락된 파일은 디버그 모드(`DEBUG_MODE=true`)에서 시작 화면에 목록이 표시됩니다.
 4. 오디오가 없는 자극물은 평가 화면에 경고가 표시되지만, 진행은 가능합니다
    (실제 연구에서는 모든 음성 파일이 갖춰진 상태에서 운영하세요).
+
+### 이미지 (`images/`, 선택)
+
+1. CSV 의 `artwork_id` 값과 동일한 이름의 이미지 파일을 `images/` 폴더에 저장합니다.
+   확장자는 `.jpg`, `.jpeg`, `.png`, `.webp` 중 무엇이든 무방.
+   예: `images/GOGH_001.jpg`, `images/CEZA_001.png`
+2. 이미지가 없으면 평가 화면에 이미지 영역이 비어 있는 상태로 진행됩니다 (에러 없음).
+3. 시각장애인/저시력 사용자에게는 이미지가 1차 정보원이 아니므로,
+   작품명/작가명/오디오 설명을 통해 평가가 가능하도록 구성되어 있습니다.
+4. alt 텍스트는 자동으로 "작품 이미지: 작가명 - 작품명" 형식으로 채워집니다.
 
 ## 8. 응답 저장 방식
 

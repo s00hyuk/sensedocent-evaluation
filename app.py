@@ -63,6 +63,7 @@ DEBUG_MODE = os.environ.get("DEBUG_MODE", "false").lower() == "true"
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 AUDIO_DIR = BASE_DIR / "audio"
+IMAGES_DIR = BASE_DIR / "images"
 RESPONSES_DIR = BASE_DIR / "responses"
 RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -204,6 +205,21 @@ def resolve_audio_path(filename: str) -> Optional[str]:
     candidate = AUDIO_DIR / p.name
     if candidate.exists():
         return str(candidate)
+    return None
+
+
+IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"]
+
+
+def resolve_image_path(artwork_id: str) -> Optional[str]:
+    """images/<artwork_id>.<ext> 형식으로 매칭. 확장자는 대소문자 모두 시도."""
+    if not artwork_id or artwork_id.lower() == "nan":
+        return None
+    for ext in IMAGE_EXTENSIONS:
+        for variant in (ext, ext.upper()):
+            candidate = IMAGES_DIR / f"{artwork_id}{variant}"
+            if candidate.exists():
+                return str(candidate)
     return None
 
 
@@ -416,6 +432,18 @@ button.sd-big-btn, .sd-big-btn button {
     font-weight: 700 !important;
 }
 
+.sd-artwork-image {
+    border: 1px solid var(--sd-border) !important;
+    border-radius: 10px !important;
+    background: #fafafa !important;
+}
+
+.sd-artwork-image img {
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+}
+
 label, .gr-radio label, .gr-checkbox label {
     font-size: 17px !important;
 }
@@ -477,6 +505,16 @@ def build_audio_state(stim: dict) -> tuple[Optional[str], str]:
     return None, "⚠ 오디오 파일을 찾을 수 없습니다. 진행은 가능하지만, 음성 없이 평가하게 됩니다."
 
 
+def build_image_state(stim: dict) -> tuple[Optional[str], str]:
+    image_path = resolve_image_path(stim.get("artwork_id", ""))
+    title = stim.get("title", "") or "작품"
+    artist = stim.get("artist", "")
+    alt = f"작품 이미지: {artist} - {title}" if artist else f"작품 이미지: {title}"
+    if image_path:
+        return image_path, alt
+    return None, alt
+
+
 # --------------------------------------------------------------------------- #
 # 콜백
 # --------------------------------------------------------------------------- #
@@ -520,6 +558,7 @@ def start_evaluation(
     stim = s.current()
     progress, title, artist_line, blind, debug_info = render_stimulus_header(stim, 0, s.total())
     audio_path, audio_warn = build_audio_state(stim)
+    image_path, image_alt = build_image_state(stim)
 
     return (
         s.__dict__,                                  # state
@@ -528,6 +567,7 @@ def start_evaluation(
         gr.update(visible=False),                    # global panel
         gr.update(visible=False),                    # done panel
         progress, title, artist_line, blind,
+        gr.update(value=image_path, label=image_alt),  # image
         audio_path, audio_warn,
         f"음성 재생 횟수: 0",                         # play count display
         debug_info,
@@ -548,6 +588,7 @@ def _no_advance(state):
         gr.update(),  # title
         gr.update(),  # artist
         gr.update(),  # blind
+        gr.update(),  # image
         gr.update(),  # audio
         gr.update(),  # audio warn
         gr.update(),  # play count
@@ -634,6 +675,7 @@ def submit_response(
             gr.update(),               # title
             gr.update(),               # artist
             gr.update(),               # blind
+            gr.update(value=None),     # image
             gr.update(value=None),     # audio
             gr.update(value=""),       # audio warn
             gr.update(value="음성 재생 횟수: 0"),  # play count
@@ -648,6 +690,7 @@ def submit_response(
         next_stim, s.current_index, s.total()
     )
     audio_path, audio_warn = build_audio_state(next_stim)
+    image_path, image_alt = build_image_state(next_stim)
 
     return (
         s.__dict__,
@@ -656,6 +699,7 @@ def submit_response(
         gr.update(visible=False),
         gr.update(visible=False),
         progress, title, artist_line, blind,
+        gr.update(value=image_path, label=image_alt),
         audio_path, audio_warn,
         "음성 재생 횟수: 0",
         debug_info,
@@ -721,6 +765,21 @@ def debug_summary() -> str:
                     lines.append(f"[DEBUG] 누락된 오디오 파일 {len(missing)}개: {missing[:10]}{'...' if len(missing) > 10 else ''}")
                 else:
                     lines.append("[DEBUG] 모든 오디오 파일 존재 확인됨")
+            # 이미지 존재 확인
+            artwork_col = resolve_column(STIMULI_DF, "artwork_id")
+            if artwork_col is not None:
+                missing_imgs = []
+                for aid in STIMULI_DF[artwork_col].dropna().unique():
+                    if resolve_image_path(str(aid)) is None:
+                        missing_imgs.append(str(aid))
+                if missing_imgs:
+                    lines.append(
+                        f"[DEBUG] 누락된 이미지 {len(missing_imgs)}개 "
+                        f"(images/<artwork_id>.jpg|png|webp): "
+                        f"{missing_imgs[:10]}{'...' if len(missing_imgs) > 10 else ''}"
+                    )
+                else:
+                    lines.append("[DEBUG] 모든 작품 이미지 존재 확인됨")
     lines.append(f"[DEBUG] 응답 저장 경로: {RESPONSES_CSV}")
     lines.append(f"[DEBUG] 전체 평가 저장 경로: {GLOBAL_CSV}")
     return "\n".join(lines)
@@ -819,6 +878,14 @@ with gr.Blocks(css=CUSTOM_CSS, title="SenseDocent 사용자 평가", analytics_e
             artist_md = gr.Markdown("", elem_classes=["sd-artist"])
             blind_md = gr.Markdown("", elem_classes=["sd-label"])
 
+            image_display = gr.Image(
+                label="작품 이미지",
+                interactive=False,
+                show_label=True,
+                height=380,
+                elem_classes=["sd-artwork-image"],
+            )
+
             audio_player = gr.Audio(
                 label="음성 설명 (재생 버튼을 눌러 들어주세요)",
                 interactive=False,
@@ -904,6 +971,7 @@ with gr.Blocks(css=CUSTOM_CSS, title="SenseDocent 사용자 평가", analytics_e
         state,
         consent_panel, eval_panel, global_panel, done_panel,
         progress_md, title_md, artist_md, blind_md,
+        image_display,
         audio_player, audio_warn_md,
         play_count_md,
         debug_md,
@@ -941,5 +1009,5 @@ if __name__ == "__main__":
         server_name="0.0.0.0",
         server_port=int(os.environ.get("PORT", 7860)),
         ssr_mode=False,
-        allowed_paths=[str(AUDIO_DIR)],
+        allowed_paths=[str(AUDIO_DIR), str(IMAGES_DIR)],
     )
