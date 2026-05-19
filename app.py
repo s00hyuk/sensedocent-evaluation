@@ -208,13 +208,64 @@ def resolve_audio_path(filename: str) -> Optional[str]:
     return None
 
 
-IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"]
+IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif", ".tif", ".tiff"]
+
+
+def _load_image_mapping() -> dict[str, str]:
+    """data/image_mapping.csv 가 있으면 {artwork_id: image_file} 로 읽어온다.
+
+    형식 (헤더 필수):
+        artwork_id,image_file
+        GOGH_001,Vincent_van_Gogh_42.jpg
+        MONE_005,Claude_Monet_18.jpg
+    """
+    mapping_csv = DATA_DIR / "image_mapping.csv"
+    if not mapping_csv.exists():
+        return {}
+    try:
+        df = pd.read_csv(mapping_csv, encoding="utf-8-sig")
+        df.columns = [c.strip().lstrip("﻿") for c in df.columns]
+        if "artwork_id" not in df.columns or "image_file" not in df.columns:
+            return {}
+        out = {}
+        for _, row in df.iterrows():
+            aid = str(row.get("artwork_id", "")).strip()
+            f = str(row.get("image_file", "")).strip()
+            if aid and f and f.lower() != "nan":
+                out[aid] = f
+        return out
+    except Exception:
+        return {}
+
+
+IMAGE_MAPPING = _load_image_mapping()
 
 
 def resolve_image_path(artwork_id: str) -> Optional[str]:
-    """images/<artwork_id>.<ext> 형식으로 매칭. 확장자는 대소문자 모두 시도."""
+    """이미지 파일 매칭 순서.
+
+    1. data/image_mapping.csv 에 명시된 파일명 (확장자 포함) 그대로 시도
+    2. images/<artwork_id>.<ext>  (확장자는 IMAGE_EXTENSIONS 순서대로)
+    """
     if not artwork_id or artwork_id.lower() == "nan":
         return None
+
+    # 1) 매핑 CSV 우선
+    mapped = IMAGE_MAPPING.get(artwork_id) or IMAGE_MAPPING.get(str(artwork_id).strip())
+    if mapped:
+        # 확장자 포함된 파일명 그대로
+        candidate = IMAGES_DIR / Path(mapped).name
+        if candidate.exists():
+            return str(candidate)
+        # 확장자가 빠진 경우 보조 시도
+        stem = Path(mapped).stem
+        for ext in IMAGE_EXTENSIONS:
+            for variant in (ext, ext.upper()):
+                c = IMAGES_DIR / f"{stem}{variant}"
+                if c.exists():
+                    return str(c)
+
+    # 2) artwork_id 그대로
     for ext in IMAGE_EXTENSIONS:
         for variant in (ext, ext.upper()):
             candidate = IMAGES_DIR / f"{artwork_id}{variant}"
@@ -765,7 +816,8 @@ def debug_summary() -> str:
                     lines.append(f"[DEBUG] 누락된 오디오 파일 {len(missing)}개: {missing[:10]}{'...' if len(missing) > 10 else ''}")
                 else:
                     lines.append("[DEBUG] 모든 오디오 파일 존재 확인됨")
-            # 이미지 존재 확인
+            # 이미지 매핑 / 존재 확인
+            lines.append(f"[DEBUG] image_mapping.csv 항목 수: {len(IMAGE_MAPPING)}")
             artwork_col = resolve_column(STIMULI_DF, "artwork_id")
             if artwork_col is not None:
                 missing_imgs = []
@@ -775,7 +827,7 @@ def debug_summary() -> str:
                 if missing_imgs:
                     lines.append(
                         f"[DEBUG] 누락된 이미지 {len(missing_imgs)}개 "
-                        f"(images/<artwork_id>.jpg|png|webp): "
+                        f"(매핑 또는 images/<artwork_id>.jpg|png|webp 확인 필요): "
                         f"{missing_imgs[:10]}{'...' if len(missing_imgs) > 10 else ''}"
                     )
                 else:

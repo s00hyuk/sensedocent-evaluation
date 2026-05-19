@@ -114,13 +114,43 @@ DEBUG_MODE=true python app.py
 
 ### 이미지 (`images/`, 선택)
 
-1. CSV 의 `artwork_id` 값과 동일한 이름의 이미지 파일을 `images/` 폴더에 저장합니다.
-   확장자는 `.jpg`, `.jpeg`, `.png`, `.webp` 중 무엇이든 무방.
-   예: `images/GOGH_001.jpg`, `images/CEZA_001.png`
-2. 이미지가 없으면 평가 화면에 이미지 영역이 비어 있는 상태로 진행됩니다 (에러 없음).
-3. 시각장애인/저시력 사용자에게는 이미지가 1차 정보원이 아니므로,
-   작품명/작가명/오디오 설명을 통해 평가가 가능하도록 구성되어 있습니다.
-4. alt 텍스트는 자동으로 "작품 이미지: 작가명 - 작품명" 형식으로 채워집니다.
+이미지 파일 매칭은 두 가지 방식 중 하나로 동작합니다 (자동 감지).
+
+**방식 1. 파일명을 `artwork_id` 와 같게 두기 (가장 단순)**
+
+CSV 의 `artwork_id` 값과 동일한 이름의 이미지 파일을 `images/` 폴더에 저장합니다.
+확장자는 `.jpg`, `.jpeg`, `.png`, `.webp`, `.bmp`, `.gif`, `.tif`, `.tiff` 중 무엇이든 무방.
+
+```
+images/GOGH_001.jpg
+images/CEZA_001.png
+...
+```
+
+**방식 2. 매핑 CSV 사용 (Kaggle 등 외부 데이터셋 활용 시)**
+
+`data/image_mapping.csv` 의 `image_file` 컬럼에 실제 파일명(확장자 포함)을 채워주세요.
+이 매핑이 위의 `artwork_id` 기반 매칭보다 **우선**합니다.
+
+예 — Kaggle [Best Artworks of All Time](https://www.kaggle.com/datasets/ikarus777/best-artworks-of-all-time)
+데이터셋의 파일명을 그대로 쓰는 경우:
+
+```csv
+artwork_id,artist_ko,title_ko,image_file
+GOGH_001,빈센트 반 고흐,별이 빛나는 밤,Vincent_van_Gogh_42.jpg
+MONE_005,클로드 모네,생라자르 역,Claude_Monet_18.jpg
+```
+
+이미지 파일들은 매핑에 적힌 파일명 그대로 `images/` 폴더에 넣으면 됩니다
+(서브폴더 사용 안 함, `images/` 평면 구조).
+
+**공통 사항**
+
+- 이미지가 없거나 매핑이 비어 있으면 평가 화면에 이미지 영역이 빈 상태로 진행됩니다 (에러 없음).
+- 시각장애인/저시력 사용자에게는 이미지가 1차 정보원이 아니므로,
+  작품명/작가명/오디오 설명을 통해 평가가 가능하도록 구성되어 있습니다.
+- alt 텍스트는 자동으로 "작품 이미지: 작가명 - 작품명" 형식으로 채워집니다 (스크린리더 호환).
+- `DEBUG_MODE=true` 로 어떤 이미지가 누락됐는지, 매핑이 몇 개 로드됐는지 확인할 수 있습니다.
 
 ## 8. 응답 저장 방식
 
