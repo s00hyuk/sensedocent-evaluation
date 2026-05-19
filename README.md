@@ -39,7 +39,7 @@ license: mit
 ├── requirements.txt
 ├── README.md
 ├── data/
-│   ├── sensedocent_evaluation_stimuli_90_v7_final.csv     # 90개 자극물 정의 (필수)
+│   ├── sensedocent_evaluation_stimuli_90_v7_with_audio.csv  # 90개 자극물 정의 (필수)
 │   ├── sensedocent_validation_summary_v7_final.csv        # 검증 요약 (선택)
 │   └── sensedocent_fact_check_log_v7.csv                  # 팩트체크 로그 (선택, 비공개)
 ├── audio/                  # *.mp3 평가용 TTS 음성 파일

@@ -39,7 +39,11 @@ AUDIO_DIR = BASE_DIR / "audio"
 RESPONSES_DIR = BASE_DIR / "responses"
 RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
 
-STIMULI_CSV = DATA_DIR / "sensedocent_evaluation_stimuli_90_v7_final.csv"
+STIMULI_CSV_CANDIDATES = [
+    DATA_DIR / "sensedocent_evaluation_stimuli_90_v7_with_audio.csv",
+    DATA_DIR / "sensedocent_evaluation_stimuli_90_v7_final.csv",
+]
+STIMULI_CSV = next((p for p in STIMULI_CSV_CANDIDATES if p.exists()), STIMULI_CSV_CANDIDATES[0])
 RESPONSES_CSV = RESPONSES_DIR / "sensedocent_responses.csv"
 GLOBAL_CSV = RESPONSES_DIR / "sensedocent_global_feedback.csv"
 
@@ -77,9 +81,10 @@ def resolve_column(df: pd.DataFrame, key: str) -> Optional[str]:
 
 def load_stimuli() -> pd.DataFrame:
     if not STIMULI_CSV.exists():
+        names = ", ".join(p.name for p in STIMULI_CSV_CANDIDATES)
         raise FileNotFoundError(
-            f"자극물 CSV가 존재하지 않습니다: {STIMULI_CSV}\n"
-            "data/ 폴더에 sensedocent_evaluation_stimuli_90_v7_final.csv 파일을 두세요."
+            f"자극물 CSV가 존재하지 않습니다.\n"
+            f"data/ 폴더에 다음 중 하나의 파일을 두세요: {names}"
         )
 
     df = pd.read_csv(STIMULI_CSV, encoding="utf-8-sig")
