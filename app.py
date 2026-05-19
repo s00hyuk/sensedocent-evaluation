@@ -905,4 +905,8 @@ with gr.Blocks(css=CUSTOM_CSS, title="SenseDocent 사용자 평가", analytics_e
 
 
 if __name__ == "__main__":
-    demo.queue().launch()
+    demo.queue().launch(
+        server_name="0.0.0.0",
+        server_port=int(os.environ.get("PORT", 7860)),
+        show_api=False,
+    )
