@@ -64,6 +64,8 @@ BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 AUDIO_DIR = BASE_DIR / "audio"
 IMAGES_DIR = BASE_DIR / "images"
+IMAGES_DIR_ALT = BASE_DIR / "image"  # singular fallback
+IMAGE_SEARCH_DIRS = [IMAGES_DIR, IMAGES_DIR_ALT]
 RESPONSES_DIR = BASE_DIR / "responses"
 RESPONSES_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -246,6 +248,8 @@ def resolve_image_path(artwork_id: str) -> Optional[str]:
 
     1. data/image_mapping.csv 에 명시된 파일명 (확장자 포함) 그대로 시도
     2. images/<artwork_id>.<ext>  (확장자는 IMAGE_EXTENSIONS 순서대로)
+
+    탐색 폴더는 images/ (복수) 와 image/ (단수) 둘 다 시도.
     """
     if not artwork_id or artwork_id.lower() == "nan":
         return None
@@ -253,24 +257,26 @@ def resolve_image_path(artwork_id: str) -> Optional[str]:
     # 1) 매핑 CSV 우선
     mapped = IMAGE_MAPPING.get(artwork_id) or IMAGE_MAPPING.get(str(artwork_id).strip())
     if mapped:
-        # 확장자 포함된 파일명 그대로
-        candidate = IMAGES_DIR / Path(mapped).name
-        if candidate.exists():
-            return str(candidate)
-        # 확장자가 빠진 경우 보조 시도
-        stem = Path(mapped).stem
-        for ext in IMAGE_EXTENSIONS:
-            for variant in (ext, ext.upper()):
-                c = IMAGES_DIR / f"{stem}{variant}"
-                if c.exists():
-                    return str(c)
-
-    # 2) artwork_id 그대로
-    for ext in IMAGE_EXTENSIONS:
-        for variant in (ext, ext.upper()):
-            candidate = IMAGES_DIR / f"{artwork_id}{variant}"
+        for d in IMAGE_SEARCH_DIRS:
+            # 확장자 포함된 파일명 그대로
+            candidate = d / Path(mapped).name
             if candidate.exists():
                 return str(candidate)
+            # 확장자가 빠진 경우 보조 시도
+            stem = Path(mapped).stem
+            for ext in IMAGE_EXTENSIONS:
+                for variant in (ext, ext.upper()):
+                    c = d / f"{stem}{variant}"
+                    if c.exists():
+                        return str(c)
+
+    # 2) artwork_id 그대로
+    for d in IMAGE_SEARCH_DIRS:
+        for ext in IMAGE_EXTENSIONS:
+            for variant in (ext, ext.upper()):
+                candidate = d / f"{artwork_id}{variant}"
+                if candidate.exists():
+                    return str(candidate)
     return None
 
 
@@ -1061,5 +1067,5 @@ if __name__ == "__main__":
         server_name="0.0.0.0",
         server_port=int(os.environ.get("PORT", 7860)),
         ssr_mode=False,
-        allowed_paths=[str(AUDIO_DIR), str(IMAGES_DIR)],
+        allowed_paths=[str(AUDIO_DIR), str(IMAGES_DIR), str(IMAGES_DIR_ALT)],
     )
