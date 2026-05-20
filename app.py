@@ -525,19 +525,15 @@ html, body, .gradio-container,
     border-color: var(--sd-accent) !important;
 }
 
-/* Radio / Checkbox 옵션 라벨 — Gradio v5 마크업 모두 커버 */
+/* Radio 옵션 라벨 — 박스형 (체크박스는 별도 처리) */
 .gradio-container .gr-radio,
-.gradio-container .gr-checkbox,
 .gradio-container [data-testid="radio"],
-.gradio-container [data-testid="checkbox"] {
+.gradio-container [role="radiogroup"] {
     background: transparent !important;
 }
 .gradio-container .gr-radio label,
-.gradio-container .gr-checkbox label,
 .gradio-container [data-testid="radio"] label,
-.gradio-container [data-testid="checkbox"] label,
-.gradio-container [role="radiogroup"] label,
-.gradio-container label[data-testid] {
+.gradio-container [role="radiogroup"] label {
     color: var(--sd-text) !important;
     background: var(--sd-card-bg-soft) !important;
     border: 1.5px solid var(--sd-border) !important;
@@ -560,6 +556,42 @@ html, body, .gradio-container,
     border-color: var(--sd-accent) !important;
     color: var(--sd-text) !important;
     font-weight: 700 !important;
+}
+
+/* Checkbox — 박스화하지 않고 native 체크 마크가 또렷이 보이도록 */
+.gradio-container .gr-checkbox,
+.gradio-container [data-testid="checkbox"] {
+    background: transparent !important;
+}
+.gradio-container .gr-checkbox label,
+.gradio-container [data-testid="checkbox"] label {
+    color: var(--sd-text) !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    min-height: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    font-size: 17px !important;
+    cursor: pointer !important;
+}
+
+/* 동의 체크박스만 강조 (sd-consent-check) */
+.sd-consent-check {
+    background: var(--sd-card-bg-soft) !important;
+    border: 2px solid var(--sd-accent) !important;
+    border-radius: 10px !important;
+    padding: 14px 18px !important;
+    margin-top: 8px !important;
+}
+.sd-consent-check label {
+    font-weight: 700 !important;
+    font-size: 17px !important;
+    color: var(--sd-text) !important;
+}
+.sd-consent-check:has(input:checked) {
+    background: var(--sd-accent-bg) !important;
 }
 
 /* Block label (gr.Textbox/Radio 의 위 라벨) */
@@ -903,11 +935,25 @@ progress.sd-progress-bar::-moz-progress-bar { background: var(--sd-accent-strong
 .sd-consent-text ul { margin: 12px 0; padding-left: 24px; }
 .sd-consent-text li { margin: 6px 0; color: var(--sd-text) !important; }
 
-/* radio/checkbox dot */
+/* radio/checkbox 인풋 */
 input[type="radio"], input[type="checkbox"] {
+    accent-color: var(--sd-accent-strong) !important;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+input[type="radio"] {
     width: 22px !important;
     height: 22px !important;
-    accent-color: var(--sd-accent-strong);
+}
+input[type="checkbox"] {
+    width: 26px !important;
+    height: 26px !important;
+    /* native 체크 마크가 어두운 배경 위에서 잘 보이도록 */
+    background-color: #ffffff;
+    border: 2px solid var(--sd-border);
+    border-radius: 4px;
+    appearance: auto;
+    -webkit-appearance: checkbox;
 }
 
 /* 모바일 */
@@ -1478,6 +1524,7 @@ with gr.Blocks(
             consent_in = gr.Checkbox(
                 label="위 내용을 확인했으며 연구 참여에 동의합니다.",
                 value=False,
+                elem_classes=["sd-consent-check"],
             )
             start_btn = gr.Button("평가 시작", variant="primary", elem_classes=["sd-big-btn"])
 
