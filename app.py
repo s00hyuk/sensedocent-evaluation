@@ -402,6 +402,35 @@ LIKERT_QUESTIONS = [
     ("q13", "Q13. 설명을 들은 뒤 작품 장면이 머릿속에 비교적 선명하게 떠올랐다."),
 ]
 
+# Likert 13문항을 4개 의미 그룹으로 묶어 화면 표시.
+# (LIKERT_QUESTIONS 순서/키 변경 금지 — 응답 CSV 컬럼 매핑이 깨짐)
+LIKERT_GROUPS = [
+    {
+        "title": "1. 머릿속으로 그려보기",
+        "subtitle": "구도와 배치",
+        "desc": "귀로 듣고 눈으로 보듯, 작품 속 인물이나 물건이 어디에 어떻게 놓여 있는지 쉽게 상상할 수 있었는지 확인하는 문항입니다.",
+        "keys": ["q1", "q2"],
+    },
+    {
+        "title": "2. 분위기와 느낌",
+        "subtitle": "감각과 몰입",
+        "desc": "단순한 사실 전달을 넘어, 작품의 분위기에 푹 빠져들거나 촉감·온도 같은 생생한 느낌을 받았는지 확인하는 문항입니다.",
+        "keys": ["q3", "q4", "q5", "q6"],
+    },
+    {
+        "title": "3. 듣기의 편안함",
+        "subtitle": "설명 양과 속도",
+        "desc": "문장 표현이 너무 어렵진 않은지, 설명이 너무 길거나 짧진 않은지, 목소리 속도나 흐름이 부드러워 듣기 편했는지 확인하는 문항입니다.",
+        "keys": ["q7", "q8", "q9", "q10"],
+    },
+    {
+        "title": "4. 종합 평가",
+        "subtitle": "만족도와 추천",
+        "desc": "설명을 다 듣고 난 뒤의 최종 결론입니다. 전체적인 장면이 선명하게 기억에 남는지, 이 방식이 정말 도움이 되었고 앞으로 미술관에서 또 쓰고 싶은지 묻는 문항입니다.",
+        "keys": ["q11", "q12", "q13"],
+    },
+]
+
 PARTICIPANT_GROUPS = [
     "시각장애인/저시력 사용자",
     "일반 사용자",
@@ -788,15 +817,63 @@ progress.sd-progress-bar::-moz-progress-bar { background: var(--sd-accent-strong
 }
 .sd-warn:empty { display: none; padding: 0; }
 
-/* Likert 박스형 그리드 */
+/* Likert 카드 헤더 */
+.sd-likert-heading {
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    color: var(--sd-text) !important;
+    margin: 0 0 6px 0 !important;
+    letter-spacing: -0.01em;
+}
+.sd-likert-sub {
+    color: var(--sd-text-muted) !important;
+    font-size: 15px !important;
+    margin: 0 0 18px 0 !important;
+}
+
+/* 4개 그룹의 sub-card */
+.sd-likert-group {
+    background: var(--sd-card-bg-soft) !important;
+    border: 1px solid var(--sd-border) !important;
+    border-radius: 12px !important;
+    padding: 18px !important;
+    margin-bottom: 16px !important;
+}
+.sd-likert-group:last-child { margin-bottom: 0 !important; }
+
+.sd-group-header { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px dashed var(--sd-border); }
+.sd-group-title {
+    margin: 0 0 6px 0 !important;
+    font-size: 19px !important;
+    font-weight: 800 !important;
+    color: var(--sd-accent) !important;
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px;
+    letter-spacing: -0.005em;
+}
+.sd-group-title-main { color: var(--sd-accent) !important; }
+.sd-group-title-sub {
+    color: var(--sd-text-muted) !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+}
+.sd-group-desc {
+    color: var(--sd-text-muted) !important;
+    font-size: 14.5px !important;
+    line-height: 1.6 !important;
+    margin: 0 !important;
+}
+
+/* Likert 박스형 그리드 — 문항 라벨 */
 .sd-likert label > span:first-child {
     font-size: 18px !important;
     font-weight: 700 !important;
     color: var(--sd-text) !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 12px !important;
     display: block;
-    line-height: 1.45;
+    line-height: 1.5 !important;
+    white-space: normal !important;
 }
+.sd-likert-group .gr-form > div + div { margin-top: 18px !important; }
 .sd-likert .gr-radio,
 .sd-likert [role="radiogroup"] {
     display: grid !important;
@@ -849,6 +926,12 @@ input[type="radio"], input[type="checkbox"] {
         grid-template-columns: repeat(2, 1fr) !important;
     }
     .sd-likert .gr-radio label { font-size: 14px !important; min-height: 52px !important; padding: 12px 6px !important; }
+    .sd-likert-heading { font-size: 19px !important; }
+    .sd-group-title { font-size: 17px !important; }
+    .sd-group-title-sub { font-size: 14px !important; }
+    .sd-group-desc { font-size: 13.5px !important; }
+    .sd-likert label > span:first-child { font-size: 16px !important; }
+    .sd-likert-group { padding: 14px !important; }
     button.sd-big-btn, .sd-big-btn button { font-size: 17px !important; min-height: 52px !important; }
 }
 @media (max-width: 480px) {
@@ -1452,15 +1535,39 @@ with gr.Blocks(
 
             debug_md = gr.Markdown("", visible=DEBUG_MODE)
 
-        likert_inputs = []
+        # Likert 13문항 — 4개 그룹으로 묶어 표시 (LIKERT_QUESTIONS 순서 유지)
+        likert_inputs_by_key: dict = {}
+        question_label_by_key = {k: q for k, q in LIKERT_QUESTIONS}
+
         with gr.Column(elem_classes=["sd-card", "sd-likert"]):
-            for key, q in LIKERT_QUESTIONS:
-                r = gr.Radio(
-                    choices=LIKERT_CHOICES,
-                    label=q,
-                    value=None,
-                )
-                likert_inputs.append(r)
+            gr.HTML(
+                '<h3 class="sd-likert-heading">아래 음성 설명에 대한 평가</h3>'
+                '<p class="sd-likert-sub">'
+                "각 문항을 읽고 1점(매우 아니다) ~ 5점(매우 그렇다) 중 가장 가까운 것을 선택해 주세요."
+                "</p>"
+            )
+
+            for group in LIKERT_GROUPS:
+                with gr.Column(elem_classes=["sd-likert-group"]):
+                    gr.HTML(
+                        f'<div class="sd-group-header">'
+                        f'  <h4 class="sd-group-title">'
+                        f'    <span class="sd-group-title-main">{group["title"]}</span>'
+                        f'    <span class="sd-group-title-sub">({group["subtitle"]})</span>'
+                        f'  </h4>'
+                        f'  <p class="sd-group-desc">{group["desc"]}</p>'
+                        f'</div>'
+                    )
+                    for key in group["keys"]:
+                        r = gr.Radio(
+                            choices=LIKERT_CHOICES,
+                            label=question_label_by_key[key],
+                            value=None,
+                        )
+                        likert_inputs_by_key[key] = r
+
+        # 콜백 입력 순서를 LIKERT_QUESTIONS 순서로 유지 (q1, q2, ..., q13)
+        likert_inputs = [likert_inputs_by_key[k] for k, _ in LIKERT_QUESTIONS]
 
         with gr.Column(elem_classes=["sd-card"]):
             gr.HTML(
