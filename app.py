@@ -906,12 +906,35 @@ progress.sd-progress-bar::-moz-progress-bar { background: var(--sd-accent-strong
     white-space: normal !important;
 }
 .sd-likert-group .gr-form > div + div { margin-top: 18px !important; }
+
+/* Likert 그리드: radiogroup 컨테이너가 5칸을 가득 채우도록 강제 */
 .sd-likert .gr-radio,
-.sd-likert [role="radiogroup"] {
+.sd-likert [role="radiogroup"],
+.sd-likert .wrap,
+.sd-likert .form .form,
+.sd-likert div[data-testid="radio"] > div {
     display: grid !important;
     grid-template-columns: repeat(5, 1fr) !important;
     gap: 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
 }
+.sd-likert .gr-radio label,
+.sd-likert [role="radiogroup"] label {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+/* 라디오 그룹의 부모 wrapper 들도 width 100% */
+.sd-likert .block,
+.sd-likert .form,
+.sd-likert .gr-form,
+.sd-likert .gr-block,
+.sd-likert [data-testid="radio"] {
+    width: 100% !important;
+}
+/* Likert 박스형 그리드 — 옵션 자체 외형 */
 .sd-likert .gr-radio label,
 .sd-likert [role="radiogroup"] label {
     display: flex !important;
@@ -968,7 +991,10 @@ input[type="checkbox"] {
     .sd-instructions { font-size: 15px; padding: 12px 14px; }
     .sd-artwork-image { height: 320px !important; }
     .sd-likert .gr-radio,
-    .sd-likert [role="radiogroup"] {
+    .sd-likert [role="radiogroup"],
+    .sd-likert .wrap,
+    .sd-likert .form .form,
+    .sd-likert div[data-testid="radio"] > div {
         grid-template-columns: repeat(2, 1fr) !important;
     }
     .sd-likert .gr-radio label { font-size: 14px !important; min-height: 52px !important; padding: 12px 6px !important; }
@@ -982,7 +1008,10 @@ input[type="checkbox"] {
 }
 @media (max-width: 480px) {
     .sd-likert .gr-radio,
-    .sd-likert [role="radiogroup"] {
+    .sd-likert [role="radiogroup"],
+    .sd-likert .wrap,
+    .sd-likert .form .form,
+    .sd-likert div[data-testid="radio"] > div {
         grid-template-columns: 1fr !important;
     }
 }
