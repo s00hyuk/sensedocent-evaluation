@@ -418,104 +418,313 @@ GLOBAL_CHOICES = ["설명 1", "설명 2", "설명 3", "잘 모르겠다"]
 
 CUSTOM_CSS = """
 :root {
-    --sd-bg: #ffffff;
-    --sd-card: #ffffff;
-    --sd-text: #1a1a1a;
-    --sd-accent: #1d4ed8;
-    --sd-border: #d4d4d8;
-    --sd-warn: #b45309;
+    --sd-bg: #0f172a;
+    --sd-card-bg: #1e293b;
+    --sd-card-bg-soft: #273449;
+    --sd-text: #f1f5f9;
+    --sd-text-muted: #94a3b8;
+    --sd-border: #334155;
+    --sd-accent: #60a5fa;
+    --sd-accent-strong: #3b82f6;
+    --sd-accent-bg: rgba(59, 130, 246, 0.18);
+    --sd-focus: #93c5fd;
+    --sd-warn-bg: rgba(120, 53, 15, 0.35);
+    --sd-warn-text: #fcd34d;
+    --sd-alert-bg: rgba(190, 18, 60, 0.18);
+    --sd-alert-border: #f43f5e;
+    --sd-alert-text: #fda4af;
+    --sd-success: #34d399;
 }
 
-body, .gradio-container {
+html, body, .gradio-container {
     background: var(--sd-bg) !important;
     color: var(--sd-text) !important;
     font-size: 18px !important;
     line-height: 1.6 !important;
 }
 
+.gradio-container { max-width: 980px !important; margin: 0 auto !important; }
+
 .gradio-container * {
     font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
+/* ----- 포커스 인디케이터 (키보드 접근성) ----- */
+*:focus { outline: none; }
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+.gr-radio label:focus-within,
+.sd-likert label:focus-within {
+    outline: 3px solid var(--sd-focus) !important;
+    outline-offset: 2px !important;
+    border-radius: 6px;
+}
+
+/* ----- Skip link (키보드 첫 진입) ----- */
+.sd-skip-link a {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    background: var(--sd-accent-strong);
+    color: #fff !important;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    z-index: 10000;
+    text-decoration: none;
+}
+.sd-skip-link a:focus { left: 16px; top: 16px; }
+
+/* ----- 시각적 hidden (스크린리더에는 노출) ----- */
+.sd-sr-only {
+    position: absolute !important;
+    width: 1px !important; height: 1px !important;
+    padding: 0 !important; margin: -1px !important;
+    overflow: hidden !important; clip: rect(0,0,0,0) !important;
+    white-space: nowrap !important; border: 0 !important;
+}
+
+/* ----- 헤더 ----- */
 #sd-header h1 {
     font-size: 28px !important;
-    font-weight: 700 !important;
+    font-weight: 800 !important;
     color: var(--sd-text) !important;
-    margin: 0.3em 0 !important;
+    margin: 12px 0 4px 0 !important;
+    letter-spacing: -0.01em;
+}
+#sd-header .sd-header-sub {
+    color: var(--sd-text-muted);
+    font-size: 15px;
+    margin-bottom: 8px;
 }
 
+/* ----- 카드 ----- */
 .sd-card {
-    background: var(--sd-card) !important;
-    border: 2px solid var(--sd-border) !important;
-    border-radius: 12px !important;
-    padding: 20px !important;
-    margin-bottom: 16px !important;
+    background: var(--sd-card-bg) !important;
+    border: 1px solid var(--sd-border) !important;
+    border-radius: 14px !important;
+    padding: 24px !important;
+    margin-bottom: 18px !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25);
 }
 
-.sd-progress {
-    font-size: 22px !important;
-    font-weight: 700 !important;
-    color: var(--sd-accent) !important;
+/* ----- 진행률 chip + bar ----- */
+.sd-progress-wrap { display: flex; flex-direction: column; gap: 10px; margin-bottom: 6px; }
+.sd-progress-chip {
+    display: inline-block;
+    background: var(--sd-accent-bg);
+    color: var(--sd-accent);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 17px;
+    border: 1px solid var(--sd-accent);
+    width: fit-content;
 }
+.sd-progress-chip strong { color: var(--sd-text); }
+progress.sd-progress-bar {
+    width: 100%;
+    height: 8px;
+    border: 0;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--sd-card-bg-soft);
+}
+progress.sd-progress-bar::-webkit-progress-bar { background: var(--sd-card-bg-soft); border-radius: 999px; }
+progress.sd-progress-bar::-webkit-progress-value { background: var(--sd-accent-strong); border-radius: 999px; }
+progress.sd-progress-bar::-moz-progress-bar { background: var(--sd-accent-strong); border-radius: 999px; }
 
+/* ----- 작품 타이틀 / 작가 / 설명 라벨 ----- */
 .sd-artwork-title {
-    font-size: 24px !important;
-    font-weight: 700 !important;
+    font-size: 30px !important;
+    font-weight: 800 !important;
     color: var(--sd-text) !important;
+    margin: 14px 0 4px 0 !important;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
 }
-
 .sd-artist {
-    font-size: 18px !important;
-    color: #374151 !important;
+    font-size: 19px !important;
+    color: var(--sd-text-muted) !important;
+    margin: 0 0 14px 0 !important;
+}
+.sd-label-chip {
+    display: inline-block;
+    background: var(--sd-accent-strong);
+    color: #fff !important;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.02em;
 }
 
-.sd-label {
-    font-size: 20px !important;
-    font-weight: 700 !important;
-    color: var(--sd-accent) !important;
-    margin-top: 6px !important;
+/* ----- 이미지 ----- */
+.sd-artwork-image {
+    border: 1px solid var(--sd-border) !important;
+    border-radius: 12px !important;
+    background: var(--sd-card-bg-soft) !important;
+    margin-top: 14px;
+}
+.sd-artwork-image img {
+    max-width: 100% !important;
+    max-height: 480px !important;
+    height: auto !important;
+    object-fit: contain !important;
+    display: block;
+    margin: 0 auto;
 }
 
+/* ----- 오디오 영역 그룹 ----- */
+.sd-audio-group {
+    background: var(--sd-card-bg-soft) !important;
+    border: 1px solid var(--sd-border) !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+    margin-top: 16px;
+}
+.sd-audio-group .sd-audio-label {
+    display: block;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--sd-text);
+    margin-bottom: 8px;
+}
+.sd-play-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    color: var(--sd-text);
+    padding: 8px 14px;
+}
+.sd-play-count strong { color: var(--sd-accent); font-size: 20px; padding: 0 4px; }
+
+/* ----- 버튼 ----- */
 button.sd-big-btn, .sd-big-btn button {
-    font-size: 20px !important;
+    font-size: 19px !important;
     font-weight: 700 !important;
     padding: 16px 24px !important;
     min-height: 56px !important;
     border-radius: 10px !important;
+    letter-spacing: 0.01em;
+}
+button.sd-played-confirmed, .sd-played-confirmed button {
+    background: var(--sd-success) !important;
+    color: #052e1e !important;
+    border-color: var(--sd-success) !important;
 }
 
+/* ----- 인라인 경고 / 상태 ----- */
+.sd-alert {
+    background: var(--sd-alert-bg);
+    border: 1px solid var(--sd-alert-border);
+    color: var(--sd-alert-text);
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+.sd-alert:empty { display: none; }
 .sd-warn {
-    color: var(--sd-warn) !important;
+    color: var(--sd-warn-text) !important;
+    background: var(--sd-warn-bg);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+.sd-warn:empty { display: none; padding: 0; }
+
+/* ----- Likert 박스형 그리드 ----- */
+.sd-likert .gr-form { gap: 22px; }
+.sd-likert label > span:first-child {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: var(--sd-text) !important;
+    margin-bottom: 10px !important;
+    line-height: 1.45;
+}
+.sd-likert .gr-radio,
+.sd-likert .gr-form > div > div[role="radiogroup"] {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 10px !important;
+}
+.sd-likert label[data-testid="radio-option"],
+.sd-likert .gr-radio label {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center;
+    padding: 14px 8px !important;
+    min-height: 56px !important;
+    border: 2px solid var(--sd-border) !important;
+    border-radius: 10px !important;
+    background: var(--sd-card-bg-soft) !important;
+    color: var(--sd-text) !important;
+    font-size: 15px !important;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+.sd-likert .gr-radio label:hover { border-color: var(--sd-accent); }
+.sd-likert .gr-radio label:has(input:checked),
+.sd-likert .gr-radio label.selected {
+    background: var(--sd-accent-bg) !important;
+    border-color: var(--sd-accent) !important;
+    color: var(--sd-text) !important;
     font-weight: 700 !important;
 }
 
-.sd-artwork-image {
-    border: 1px solid var(--sd-border) !important;
-    border-radius: 10px !important;
-    background: #fafafa !important;
+/* ----- 동의/그룹 라디오, 텍스트박스, 체크박스 ----- */
+.gr-textbox textarea, .gr-textbox input, textarea, input[type="text"] {
+    background: var(--sd-card-bg-soft) !important;
+    color: var(--sd-text) !important;
+    border: 1.5px solid var(--sd-border) !important;
+    font-size: 17px !important;
 }
-
-.sd-artwork-image img {
-    max-width: 100% !important;
-    height: auto !important;
-    object-fit: contain !important;
+.gr-textbox textarea:focus, input[type="text"]:focus {
+    border-color: var(--sd-accent) !important;
 }
-
-label, .gr-radio label, .gr-checkbox label {
+label > span, .gr-checkbox label, .gr-radio label > span {
+    color: var(--sd-text) !important;
     font-size: 17px !important;
 }
 
-/* 라디오 버튼 좀 더 잘 보이게 */
 input[type="radio"], input[type="checkbox"] {
-    width: 20px !important;
-    height: 20px !important;
+    width: 22px !important;
+    height: 22px !important;
+    accent-color: var(--sd-accent-strong);
 }
 
-/* 모바일 대응 */
+/* ----- Gradio 컴포넌트 다크 대응 ----- */
+.gradio-container .form, .gradio-container .block { background: transparent !important; border: 0 !important; }
+.gradio-container .gr-padded { padding: 0 !important; }
+
+/* ----- 모바일 ----- */
 @media (max-width: 768px) {
+    .gradio-container { padding: 0 8px !important; }
     body, .gradio-container { font-size: 17px !important; }
-    .sd-artwork-title { font-size: 21px !important; }
-    button.sd-big-btn, .sd-big-btn button { font-size: 18px !important; min-height: 52px !important; }
+    .sd-card { padding: 16px !important; }
+    #sd-header h1 { font-size: 24px !important; }
+    .sd-artwork-title { font-size: 24px !important; }
+    .sd-artist { font-size: 17px !important; }
+    .sd-likert .gr-radio,
+    .sd-likert .gr-form > div > div[role="radiogroup"] {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    .sd-likert .gr-radio label { font-size: 14px !important; min-height: 52px !important; padding: 12px 6px !important; }
+    button.sd-big-btn, .sd-big-btn button { font-size: 17px !important; min-height: 52px !important; }
+    .sd-artwork-image img { max-height: 360px !important; }
+}
+@media (max-width: 480px) {
+    .sd-likert .gr-radio,
+    .sd-likert .gr-form > div > div[role="radiogroup"] {
+        grid-template-columns: 1fr !important;
+    }
 }
 """
 
@@ -532,17 +741,40 @@ def auto_assign_block(participant_id: str) -> str:
     return blocks[h % len(blocks)]
 
 
-def format_progress(idx: int, total: int) -> str:
-    return f"진행률: {idx + 1} / {total}"
-
-
 def render_stimulus_header(stim: dict, idx: int, total: int) -> tuple[str, str, str, str, str]:
-    progress = format_progress(idx, total)
+    """평가 화면 상단 헤더 HTML 5종 반환.
+
+    - progress_html: chip + progress bar (aria-live polite 영역 안에 표시됨)
+    - title_html: <h3 class="sd-artwork-title">…</h3>
+    - artist_html: <p class="sd-artist">…</p>
+    - label_html: <span class="sd-label-chip">…</span>
+    - debug_info: DEBUG_MODE 일 때만 채워짐
+    """
+    # 블록 내 자극물은 작품별로 3개씩 정렬되어 있다는 전제 (get_block_stimuli 가 보장).
+    artwork_total = max(total // 3, 1)
+    artwork_no = idx // 3 + 1
+    desc_no = idx % 3 + 1
+
     title = stim.get("title", "") or "(작품명 정보 없음)"
     artist = stim.get("artist", "") or ""
     year = stim.get("artwork_year", "")
     artist_line = artist + (f" · {year}" if year and year.lower() != "nan" else "")
     blind = stim.get("blind_label", "") or "설명"
+
+    progress_html = (
+        f'<div class="sd-progress-wrap">'
+        f'  <span class="sd-progress-chip" role="status" aria-live="polite">'
+        f'    작품 <strong>{artwork_no}</strong> / {artwork_total}'
+        f'    &nbsp;·&nbsp; 설명 <strong>{desc_no}</strong> / 3'
+        f'    &nbsp;<span style="opacity:0.75">(총 {idx + 1} / {total})</span>'
+        f'  </span>'
+        f'  <progress class="sd-progress-bar" max="{total}" value="{idx + 1}" '
+        f'aria-label="전체 진행률 {idx + 1} / {total}"></progress>'
+        f'</div>'
+    )
+    title_html = f'<h3 class="sd-artwork-title">{title}</h3>'
+    artist_html = f'<p class="sd-artist">{artist_line}</p>' if artist_line else '<p class="sd-artist"></p>'
+    label_html = f'<span class="sd-label-chip">{blind}</span>'
 
     debug_info = ""
     if DEBUG_MODE:
@@ -552,14 +784,18 @@ def render_stimulus_header(stim: dict, idx: int, total: int) -> tuple[str, str, 
             f"audio={stim.get('audio_file')}\n\n"
             f"script_text:\n{stim.get('script_text', '')}"
         )
-    return progress, title, artist_line, blind, debug_info
+    return progress_html, title_html, artist_html, label_html, debug_info
+
+
+def play_count_html(count: int) -> str:
+    return f'<div class="sd-play-count" aria-live="polite">음성 재생 횟수: <strong>{count}</strong> 회</div>'
 
 
 def build_audio_state(stim: dict) -> tuple[Optional[str], str]:
     audio_path = resolve_audio_path(stim.get("audio_file", ""))
     if audio_path:
         return audio_path, ""
-    return None, "⚠ 오디오 파일을 찾을 수 없습니다. 진행은 가능하지만, 음성 없이 평가하게 됩니다."
+    return None, '<div class="sd-warn">⚠ 오디오 파일을 찾을 수 없습니다. 진행은 가능하지만 음성 없이 평가합니다.</div>'
 
 
 def build_image_state(stim: dict) -> tuple[Optional[str], str]:
@@ -577,6 +813,23 @@ def build_image_state(stim: dict) -> tuple[Optional[str], str]:
 # --------------------------------------------------------------------------- #
 
 
+PLAYED_BTN_INITIAL = "🔊 음성을 들었습니다"
+
+
+def _played_btn_update(count: int):
+    if count <= 0:
+        return gr.update(
+            value=PLAYED_BTN_INITIAL,
+            variant="secondary",
+            elem_classes=["sd-big-btn"],
+        )
+    return gr.update(
+        value=f"✓ 청취 완료 (재생 횟수: {count})",
+        variant="primary",
+        elem_classes=["sd-big-btn", "sd-played-confirmed"],
+    )
+
+
 def start_evaluation(
     participant_id,
     participant_group,
@@ -588,19 +841,19 @@ def start_evaluation(
     pid = (participant_id or "").strip()
     if not pid:
         gr.Warning("참가자 ID를 입력해주세요.")
-        return _no_advance(state)
+        return _no_advance(state, alert="참가자 ID를 입력해주세요.")
     if not participant_group:
         gr.Warning("사용자 그룹을 선택해주세요.")
-        return _no_advance(state)
+        return _no_advance(state, alert="사용자 그룹을 선택해주세요.")
     if not consent:
         gr.Warning("연구 참여 동의 체크가 필요합니다.")
-        return _no_advance(state)
+        return _no_advance(state, alert="연구 참여 동의 체크가 필요합니다.")
 
     block = block_choice if block_choice and block_choice != "자동 배정" else auto_assign_block(pid)
     stimuli = get_block_stimuli(block)
     if not stimuli:
         gr.Warning(f"Block {block}에 자극물이 없습니다. CSV를 확인해주세요.")
-        return _no_advance(state)
+        return _no_advance(state, alert=f"Block {block}에 자극물이 없습니다.")
 
     s = SessionState(
         participant_id=pid,
@@ -623,24 +876,28 @@ def start_evaluation(
         gr.update(visible=True),                     # eval panel
         gr.update(visible=False),                    # global panel
         gr.update(visible=False),                    # done panel
+        "",                                          # alert (clear)
         progress, title, artist_line, blind,
         gr.update(value=image_path, label=image_alt),  # image
         audio_path, audio_warn,
-        f"음성 재생 횟수: 0",                         # play count display
+        play_count_html(0),                          # play count display
+        _played_btn_update(0),                       # played button reset
         debug_info,
-        *[gr.update(value=None) for _ in LIKERT_QUESTIONS],  # Likert reset
+        *[gr.update(value=None) for _ in LIKERT_QUESTIONS],
         "", "", "",                                  # free text reset
     )
 
 
-def _no_advance(state):
-    """검증 실패 시 화면 유지."""
+def _no_advance(state, alert: str = ""):
+    """검증 실패 시 화면 유지. alert 가 있으면 인라인 경고만 갱신."""
+    alert_html = f'<div class="sd-alert" role="alert" aria-live="assertive">{alert}</div>' if alert else ""
     return (
         state,
         gr.update(),  # consent
         gr.update(),  # eval
         gr.update(),  # global
         gr.update(),  # done
+        alert_html,   # alert region
         gr.update(),  # progress
         gr.update(),  # title
         gr.update(),  # artist
@@ -649,6 +906,7 @@ def _no_advance(state):
         gr.update(),  # audio
         gr.update(),  # audio warn
         gr.update(),  # play count
+        gr.update(),  # played button
         gr.update(),  # debug
         *[gr.update() for _ in LIKERT_QUESTIONS],
         gr.update(), gr.update(), gr.update(),
@@ -658,7 +916,7 @@ def _no_advance(state):
 def mark_audio_played(state):
     s = state_from_dict(state)
     s.audio_play_count += 1
-    return s.__dict__, f"음성 재생 횟수: {s.audio_play_count}"
+    return s.__dict__, play_count_html(s.audio_play_count), _played_btn_update(s.audio_play_count)
 
 
 def submit_response(
@@ -671,17 +929,20 @@ def submit_response(
     likert_vals = [q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13]
 
     if any(v is None for v in likert_vals):
-        gr.Warning("13개의 평가 문항(Q1~Q13)에 모두 응답해주세요.")
-        return _no_advance(state)
+        msg = "13개의 평가 문항(Q1~Q13)에 모두 응답해주세요."
+        gr.Warning(msg)
+        return _no_advance(state, alert=msg)
 
     if s.audio_play_count == 0:
-        gr.Warning("음성을 먼저 재생하거나 들은 뒤 평가를 진행해주세요. ('음성을 들었습니다' 버튼을 눌러 확인해주세요.)")
-        return _no_advance(state)
+        msg = "음성을 먼저 재생하거나 들은 뒤 '음성을 들었습니다' 버튼을 눌러 주세요."
+        gr.Warning(msg)
+        return _no_advance(state, alert=msg)
 
     stim = s.current()
     if stim is None:
-        gr.Warning("현재 자극물 정보를 찾을 수 없습니다.")
-        return _no_advance(state)
+        msg = "현재 자극물 정보를 찾을 수 없습니다."
+        gr.Warning(msg)
+        return _no_advance(state, alert=msg)
 
     end_time = time.time()
     response_row = {
@@ -712,8 +973,9 @@ def submit_response(
     try:
         append_csv(RESPONSES_CSV, RESPONSE_FIELDS, response_row)
     except Exception as e:
-        gr.Warning(f"응답 저장 중 오류가 발생했습니다: {e}")
-        return _no_advance(state)
+        msg = f"응답 저장 중 오류가 발생했습니다: {e}"
+        gr.Warning(msg)
+        return _no_advance(state, alert=msg)
 
     # 다음 자극물로 이동
     s.current_index += 1
@@ -728,6 +990,7 @@ def submit_response(
             gr.update(visible=False),  # eval
             gr.update(visible=True),   # global
             gr.update(visible=False),  # done
+            "",                        # alert clear
             gr.update(),               # progress
             gr.update(),               # title
             gr.update(),               # artist
@@ -735,7 +998,8 @@ def submit_response(
             gr.update(value=None),     # image
             gr.update(value=None),     # audio
             gr.update(value=""),       # audio warn
-            gr.update(value="음성 재생 횟수: 0"),  # play count
+            play_count_html(0),        # play count
+            _played_btn_update(0),     # played button reset
             gr.update(value=""),       # debug
             *[gr.update(value=None) for _ in LIKERT_QUESTIONS],
             gr.update(value=""), gr.update(value=""), gr.update(value=""),
@@ -755,10 +1019,12 @@ def submit_response(
         gr.update(visible=True),
         gr.update(visible=False),
         gr.update(visible=False),
+        "",                            # alert clear
         progress, title, artist_line, blind,
         gr.update(value=image_path, label=image_alt),
         audio_path, audio_warn,
-        "음성 재생 횟수: 0",
+        play_count_html(0),
+        _played_btn_update(0),
         debug_info,
         *[gr.update(value=None) for _ in LIKERT_QUESTIONS],
         "", "", "",
@@ -884,11 +1150,24 @@ DONE_TEXT = """
 """
 
 
-with gr.Blocks(css=CUSTOM_CSS, title="SenseDocent 사용자 평가", analytics_enabled=False) as demo:
+with gr.Blocks(
+    css=CUSTOM_CSS,
+    title="SenseDocent 사용자 평가",
+    analytics_enabled=False,
+    theme=gr.themes.Base(),
+) as demo:
     state = gr.State(value=empty_state())
 
+    # Skip link (키보드 첫 진입 시 노출)
+    gr.HTML(
+        '<div class="sd-skip-link"><a href="#sd-main">본문으로 바로 가기</a></div>'
+    )
+
     with gr.Column(elem_id="sd-header"):
-        gr.Markdown("# SenseDocent 사용자 평가")
+        gr.HTML(
+            '<h1>SenseDocent 사용자 평가</h1>'
+            '<p class="sd-header-sub">AI 명화 오디오 큐레이션 사용자 평가 연구</p>'
+        )
 
     # 데이터 로딩 에러 표시
     if LOAD_ERROR:
@@ -929,42 +1208,58 @@ with gr.Blocks(css=CUSTOM_CSS, title="SenseDocent 사용자 평가", analytics_e
     # -----------------------------------------------------------------------
     # 화면 2: 평가
     # -----------------------------------------------------------------------
-    with gr.Column(visible=False) as eval_panel:
+    with gr.Column(visible=False, elem_id="sd-main") as eval_panel:
+        gr.HTML('<h2 class="sd-sr-only">자극물 평가</h2>')
+        alert_md = gr.HTML("")
+
         with gr.Column(elem_classes=["sd-card"]):
-            progress_md = gr.Markdown("진행률: 0 / 0", elem_classes=["sd-progress"])
-            title_md = gr.Markdown("", elem_classes=["sd-artwork-title"])
-            artist_md = gr.Markdown("", elem_classes=["sd-artist"])
-            blind_md = gr.Markdown("", elem_classes=["sd-label"])
+            progress_md = gr.HTML("")
+            title_md = gr.HTML("")
+            artist_md = gr.HTML("")
+            blind_md = gr.HTML("")
 
             image_display = gr.Image(
                 label="작품 이미지",
                 interactive=False,
-                show_label=True,
-                height=380,
+                show_label=False,
+                height=480,
                 elem_classes=["sd-artwork-image"],
             )
 
-            audio_player = gr.Audio(
-                label="음성 설명 (재생 버튼을 눌러 들어주세요)",
-                interactive=False,
-                autoplay=False,
-            )
-            audio_warn_md = gr.Markdown("", elem_classes=["sd-warn"])
-
-            with gr.Row():
-                played_btn = gr.Button(
-                    "🔊 음성을 들었습니다",
-                    variant="secondary",
-                    elem_classes=["sd-big-btn"],
+            with gr.Column(elem_classes=["sd-audio-group"]):
+                gr.HTML(
+                    '<span class="sd-audio-label">음성 설명</span>'
+                    '<span class="sd-sr-only">'
+                    "재생 버튼을 눌러 들으세요. 들은 뒤 아래 '음성을 들었습니다' 버튼을 눌러 주세요."
+                    "</span>"
                 )
-                play_count_md = gr.Markdown("음성 재생 횟수: 0")
+                audio_player = gr.Audio(
+                    label="음성 설명",
+                    interactive=False,
+                    show_label=False,
+                    autoplay=False,
+                )
+                audio_warn_md = gr.HTML("")
+
+                with gr.Row():
+                    played_btn = gr.Button(
+                        PLAYED_BTN_INITIAL,
+                        variant="secondary",
+                        elem_classes=["sd-big-btn"],
+                    )
+                    play_count_md = gr.HTML(play_count_html(0))
 
             debug_md = gr.Markdown("", visible=DEBUG_MODE)
 
-            gr.Markdown(EVAL_INTRO)
+            gr.HTML(
+                '<p style="color:var(--sd-text-muted); font-size:15px; margin-top:14px;">'
+                "음성 설명을 들은 뒤, 아래 13개 평가 문항에 1~5점으로 응답해 주세요. "
+                "자유 응답은 선택 입력입니다."
+                "</p>"
+            )
 
         likert_inputs = []
-        with gr.Column(elem_classes=["sd-card"]):
+        with gr.Column(elem_classes=["sd-card", "sd-likert"]):
             for key, q in LIKERT_QUESTIONS:
                 r = gr.Radio(
                     choices=LIKERT_CHOICES,
@@ -974,17 +1269,26 @@ with gr.Blocks(css=CUSTOM_CSS, title="SenseDocent 사용자 평가", analytics_e
                 likert_inputs.append(r)
 
         with gr.Column(elem_classes=["sd-card"]):
-            gr.Markdown("### 자유 응답 (선택 입력)")
+            gr.HTML(
+                '<h3 style="margin:0 0 12px 0; font-size:20px;">'
+                '자유 응답 '
+                '<span style="color:var(--sd-text-muted); font-weight:500; font-size:16px;">'
+                '(선택 입력)'
+                '</span></h3>'
+            )
             good_expr = gr.Textbox(
-                label="F1. 가장 이해하기 쉬웠거나 좋았던 표현이 있다면 적어주세요.",
+                label="가장 이해하기 쉬웠거나 좋았던 표현이 있다면 적어주세요.",
+                placeholder="예) '소용돌이' 표현이 인상적이었어요",
                 lines=2,
             )
             awkward_expr = gr.Textbox(
-                label="F2. 이해하기 어렵거나 어색했던 표현이 있다면 적어주세요.",
+                label="이해하기 어렵거나 어색했던 표현이 있다면 적어주세요.",
+                placeholder="예) '대각선 구도'가 무슨 뜻인지 잘 떠오르지 않았어요",
                 lines=2,
             )
             improvement = gr.Textbox(
-                label="F3. 추가로 개선되었으면 하는 점이 있다면 적어주세요.",
+                label="추가로 개선되었으면 하는 점이 있다면 적어주세요.",
+                placeholder="설명 속도, 비유, 묘사 방식 등에 대한 의견을 자유롭게 적어 주세요.",
                 lines=2,
             )
 
@@ -1028,10 +1332,12 @@ with gr.Blocks(css=CUSTOM_CSS, title="SenseDocent 사용자 평가", analytics_e
     start_outputs = [
         state,
         consent_panel, eval_panel, global_panel, done_panel,
+        alert_md,
         progress_md, title_md, artist_md, blind_md,
         image_display,
         audio_player, audio_warn_md,
         play_count_md,
+        played_btn,
         debug_md,
         *likert_inputs,
         good_expr, awkward_expr, improvement,
@@ -1046,7 +1352,7 @@ with gr.Blocks(css=CUSTOM_CSS, title="SenseDocent 사용자 평가", analytics_e
     played_btn.click(
         fn=mark_audio_played,
         inputs=[state],
-        outputs=[state, play_count_md],
+        outputs=[state, play_count_md, played_btn],
     )
 
     next_btn.click(
