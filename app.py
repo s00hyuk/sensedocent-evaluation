@@ -1440,7 +1440,7 @@ DONE_HTML = """
   <h2 style="font-size:26px !important;">평가가 모두 완료되었습니다 🙏</h2>
   <p>소중한 응답을 주셔서 감사합니다. 응답은 안전하게 저장되었습니다.</p>
   <p>본 연구 결과는 시각장애인을 위한 미술 접근성 향상에 활용될 예정입니다.</p>
-  <p>문의: <strong>연구자 이메일 (placeholder@example.com)</strong></p>
+  <p>문의: <strong>임수혁 (soohyuk@kakao.com)</strong></p>
 </div>
 """
 
