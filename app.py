@@ -417,57 +417,179 @@ GLOBAL_CHOICES = ["설명 1", "설명 2", "설명 3", "잘 모르겠다"]
 # --------------------------------------------------------------------------- #
 
 CUSTOM_CSS = """
-:root {
+:root, body.dark {
     --sd-bg: #0f172a;
     --sd-card-bg: #1e293b;
     --sd-card-bg-soft: #273449;
     --sd-text: #f1f5f9;
-    --sd-text-muted: #94a3b8;
+    --sd-text-muted: #cbd5e1;
+    --sd-text-dim: #94a3b8;
     --sd-border: #334155;
     --sd-accent: #60a5fa;
     --sd-accent-strong: #3b82f6;
-    --sd-accent-bg: rgba(59, 130, 246, 0.18);
+    --sd-accent-bg: rgba(59, 130, 246, 0.2);
     --sd-focus: #93c5fd;
-    --sd-warn-bg: rgba(120, 53, 15, 0.35);
+    --sd-warn-bg: rgba(120, 53, 15, 0.4);
     --sd-warn-text: #fcd34d;
-    --sd-alert-bg: rgba(190, 18, 60, 0.18);
+    --sd-alert-bg: rgba(190, 18, 60, 0.22);
     --sd-alert-border: #f43f5e;
-    --sd-alert-text: #fda4af;
+    --sd-alert-text: #fecdd3;
     --sd-success: #34d399;
 }
 
-html, body, .gradio-container {
+/* ========= Gradio 라이트 테마 강제 다크화 ========= */
+html, body, .gradio-container,
+.gradio-container .main, .gradio-container .wrap, .gradio-container .container {
     background: var(--sd-bg) !important;
     color: var(--sd-text) !important;
     font-size: 18px !important;
     line-height: 1.6 !important;
 }
-
 .gradio-container { max-width: 980px !important; margin: 0 auto !important; }
-
 .gradio-container * {
     font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
-/* ----- 포커스 인디케이터 (키보드 접근성) ----- */
+/* 모든 텍스트 요소를 밝은 색으로 강제 */
+.gradio-container p,
+.gradio-container li,
+.gradio-container h1,
+.gradio-container h2,
+.gradio-container h3,
+.gradio-container h4,
+.gradio-container span,
+.gradio-container label,
+.gradio-container .prose,
+.gradio-container .prose * {
+    color: var(--sd-text) !important;
+}
+
+/* Gradio 내부 컴포넌트 컨테이너 다크화 */
+.gradio-container .form,
+.gradio-container .block,
+.gradio-container .padded,
+.gradio-container .gr-block,
+.gradio-container .gr-form,
+.gradio-container .gr-padded,
+.gradio-container .gr-group {
+    background: transparent !important;
+    border-color: var(--sd-border) !important;
+}
+
+/* 입력 필드 (Textbox, Radio container) */
+.gradio-container textarea,
+.gradio-container input[type="text"],
+.gradio-container input[type="number"],
+.gradio-container input:not([type="radio"]):not([type="checkbox"]) {
+    background: var(--sd-card-bg-soft) !important;
+    color: var(--sd-text) !important;
+    border: 1.5px solid var(--sd-border) !important;
+    font-size: 17px !important;
+}
+.gradio-container textarea::placeholder,
+.gradio-container input::placeholder {
+    color: var(--sd-text-dim) !important;
+    opacity: 1;
+}
+.gradio-container textarea:focus,
+.gradio-container input:not([type="radio"]):not([type="checkbox"]):focus {
+    border-color: var(--sd-accent) !important;
+}
+
+/* Radio / Checkbox 옵션 라벨 — Gradio v5 마크업 모두 커버 */
+.gradio-container .gr-radio,
+.gradio-container .gr-checkbox,
+.gradio-container [data-testid="radio"],
+.gradio-container [data-testid="checkbox"] {
+    background: transparent !important;
+}
+.gradio-container .gr-radio label,
+.gradio-container .gr-checkbox label,
+.gradio-container [data-testid="radio"] label,
+.gradio-container [data-testid="checkbox"] label,
+.gradio-container [role="radiogroup"] label,
+.gradio-container label[data-testid] {
+    color: var(--sd-text) !important;
+    background: var(--sd-card-bg-soft) !important;
+    border: 1.5px solid var(--sd-border) !important;
+    padding: 10px 14px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    min-height: 48px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 16px !important;
+}
+.gradio-container .gr-radio label:hover,
+.gradio-container [role="radiogroup"] label:hover {
+    border-color: var(--sd-accent) !important;
+}
+.gradio-container .gr-radio label:has(input:checked),
+.gradio-container [role="radiogroup"] label:has(input:checked) {
+    background: var(--sd-accent-bg) !important;
+    border-color: var(--sd-accent) !important;
+    color: var(--sd-text) !important;
+    font-weight: 700 !important;
+}
+
+/* Block label (gr.Textbox/Radio 의 위 라벨) */
+.gradio-container .gr-block-label,
+.gradio-container .block-label,
+.gradio-container span.label,
+.gradio-container label > span:first-child,
+.gradio-container .block-title {
+    color: var(--sd-text) !important;
+    font-weight: 700 !important;
+    font-size: 17px !important;
+}
+
+/* 버튼 */
+.gradio-container button:not(.sd-big-btn):not([class*="audio"]),
+.gradio-container .gr-button {
+    background: var(--sd-card-bg-soft) !important;
+    color: var(--sd-text) !important;
+    border: 1.5px solid var(--sd-border) !important;
+}
+.gradio-container button.primary,
+.gradio-container button.gr-button-primary,
+.gradio-container .gr-button-primary {
+    background: var(--sd-accent-strong) !important;
+    color: #ffffff !important;
+    border-color: var(--sd-accent-strong) !important;
+}
+
+button.sd-big-btn, .sd-big-btn button {
+    font-size: 19px !important;
+    font-weight: 700 !important;
+    padding: 16px 24px !important;
+    min-height: 56px !important;
+    border-radius: 10px !important;
+    letter-spacing: 0.01em;
+    width: 100% !important;
+}
+button.sd-played-confirmed, .sd-played-confirmed button {
+    background: var(--sd-success) !important;
+    color: #052e1e !important;
+    border-color: var(--sd-success) !important;
+}
+
+/* 포커스 인디케이터 */
 *:focus { outline: none; }
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 [role="button"]:focus-visible,
-.gr-radio label:focus-within,
-.sd-likert label:focus-within {
+label:focus-within {
     outline: 3px solid var(--sd-focus) !important;
     outline-offset: 2px !important;
-    border-radius: 6px;
 }
 
-/* ----- Skip link (키보드 첫 진입) ----- */
+/* Skip link */
 .sd-skip-link a {
     position: absolute;
-    left: -9999px;
-    top: -9999px;
+    left: -9999px; top: -9999px;
     background: var(--sd-accent-strong);
     color: #fff !important;
     padding: 10px 16px;
@@ -478,7 +600,7 @@ textarea:focus-visible,
 }
 .sd-skip-link a:focus { left: 16px; top: 16px; }
 
-/* ----- 시각적 hidden (스크린리더에는 노출) ----- */
+/* 시각 hidden */
 .sd-sr-only {
     position: absolute !important;
     width: 1px !important; height: 1px !important;
@@ -487,7 +609,7 @@ textarea:focus-visible,
     white-space: nowrap !important; border: 0 !important;
 }
 
-/* ----- 헤더 ----- */
+/* 헤더 */
 #sd-header h1 {
     font-size: 28px !important;
     font-weight: 800 !important;
@@ -496,12 +618,12 @@ textarea:focus-visible,
     letter-spacing: -0.01em;
 }
 #sd-header .sd-header-sub {
-    color: var(--sd-text-muted);
+    color: var(--sd-text-muted) !important;
     font-size: 15px;
     margin-bottom: 8px;
 }
 
-/* ----- 카드 ----- */
+/* 카드 */
 .sd-card {
     background: var(--sd-card-bg) !important;
     border: 1px solid var(--sd-border) !important;
@@ -511,12 +633,12 @@ textarea:focus-visible,
     box-shadow: 0 1px 2px rgba(0,0,0,0.25);
 }
 
-/* ----- 진행률 chip + bar ----- */
+/* 진행률 */
 .sd-progress-wrap { display: flex; flex-direction: column; gap: 10px; margin-bottom: 6px; }
 .sd-progress-chip {
     display: inline-block;
     background: var(--sd-accent-bg);
-    color: var(--sd-accent);
+    color: var(--sd-text) !important;
     padding: 8px 16px;
     border-radius: 999px;
     font-weight: 700;
@@ -524,20 +646,20 @@ textarea:focus-visible,
     border: 1px solid var(--sd-accent);
     width: fit-content;
 }
-.sd-progress-chip strong { color: var(--sd-text); }
+.sd-progress-chip strong { color: var(--sd-accent) !important; font-size: 19px; padding: 0 2px; }
+.sd-progress-chip .sd-progress-total { color: var(--sd-text-muted) !important; font-weight: 500; }
 progress.sd-progress-bar {
-    width: 100%;
-    height: 8px;
-    border: 0;
-    border-radius: 999px;
+    width: 100%; height: 8px;
+    border: 0; border-radius: 999px;
     overflow: hidden;
     background: var(--sd-card-bg-soft);
+    appearance: none;
 }
 progress.sd-progress-bar::-webkit-progress-bar { background: var(--sd-card-bg-soft); border-radius: 999px; }
 progress.sd-progress-bar::-webkit-progress-value { background: var(--sd-accent-strong); border-radius: 999px; }
 progress.sd-progress-bar::-moz-progress-bar { background: var(--sd-accent-strong); border-radius: 999px; }
 
-/* ----- 작품 타이틀 / 작가 / 설명 라벨 ----- */
+/* 작품 타이틀 */
 .sd-artwork-title {
     font-size: 30px !important;
     font-weight: 800 !important;
@@ -554,7 +676,7 @@ progress.sd-progress-bar::-moz-progress-bar { background: var(--sd-accent-strong
 .sd-label-chip {
     display: inline-block;
     background: var(--sd-accent-strong);
-    color: #fff !important;
+    color: #ffffff !important;
     padding: 6px 14px;
     border-radius: 8px;
     font-weight: 700;
@@ -562,23 +684,36 @@ progress.sd-progress-bar::-moz-progress-bar { background: var(--sd-accent-strong
     letter-spacing: 0.02em;
 }
 
-/* ----- 이미지 ----- */
+/* 이미지 — 모든 작품 동일한 박스 크기 */
 .sd-artwork-image {
     border: 1px solid var(--sd-border) !important;
     border-radius: 12px !important;
     background: var(--sd-card-bg-soft) !important;
     margin-top: 14px;
+    height: 460px !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 8px !important;
+}
+.sd-artwork-image > div,
+.sd-artwork-image .image-container,
+.sd-artwork-image .image-frame {
+    width: 100% !important;
+    height: 100% !important;
+    background: transparent !important;
 }
 .sd-artwork-image img {
-    max-width: 100% !important;
-    max-height: 480px !important;
-    height: auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
     object-fit: contain !important;
     display: block;
-    margin: 0 auto;
 }
 
-/* ----- 오디오 영역 그룹 ----- */
+/* 오디오 그룹 */
 .sd-audio-group {
     background: var(--sd-card-bg-soft) !important;
     border: 1px solid var(--sd-border) !important;
@@ -590,7 +725,7 @@ progress.sd-progress-bar::-moz-progress-bar { background: var(--sd-accent-strong
     display: block;
     font-size: 17px;
     font-weight: 700;
-    color: var(--sd-text);
+    color: var(--sd-text) !important;
     margin-bottom: 8px;
 }
 .sd-play-count {
@@ -598,31 +733,19 @@ progress.sd-progress-bar::-moz-progress-bar { background: var(--sd-accent-strong
     align-items: center;
     justify-content: center;
     font-size: 17px;
-    color: var(--sd-text);
+    color: var(--sd-text) !important;
     padding: 8px 14px;
+    background: var(--sd-card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--sd-border);
 }
-.sd-play-count strong { color: var(--sd-accent); font-size: 20px; padding: 0 4px; }
+.sd-play-count strong { color: var(--sd-accent) !important; font-size: 22px; padding: 0 6px; }
 
-/* ----- 버튼 ----- */
-button.sd-big-btn, .sd-big-btn button {
-    font-size: 19px !important;
-    font-weight: 700 !important;
-    padding: 16px 24px !important;
-    min-height: 56px !important;
-    border-radius: 10px !important;
-    letter-spacing: 0.01em;
-}
-button.sd-played-confirmed, .sd-played-confirmed button {
-    background: var(--sd-success) !important;
-    color: #052e1e !important;
-    border-color: var(--sd-success) !important;
-}
-
-/* ----- 인라인 경고 / 상태 ----- */
+/* 인라인 경고 / 상태 */
 .sd-alert {
     background: var(--sd-alert-bg);
     border: 1px solid var(--sd-alert-border);
-    color: var(--sd-alert-text);
+    color: var(--sd-alert-text) !important;
     padding: 12px 16px;
     border-radius: 10px;
     font-weight: 700;
@@ -639,72 +762,52 @@ button.sd-played-confirmed, .sd-played-confirmed button {
 }
 .sd-warn:empty { display: none; padding: 0; }
 
-/* ----- Likert 박스형 그리드 ----- */
-.sd-likert .gr-form { gap: 22px; }
+/* Likert 박스형 그리드 */
 .sd-likert label > span:first-child {
     font-size: 18px !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
     color: var(--sd-text) !important;
     margin-bottom: 10px !important;
+    display: block;
     line-height: 1.45;
 }
 .sd-likert .gr-radio,
-.sd-likert .gr-form > div > div[role="radiogroup"] {
+.sd-likert [role="radiogroup"] {
     display: grid !important;
     grid-template-columns: repeat(5, 1fr) !important;
     gap: 10px !important;
 }
-.sd-likert label[data-testid="radio-option"],
-.sd-likert .gr-radio label {
+.sd-likert .gr-radio label,
+.sd-likert [role="radiogroup"] label {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    text-align: center;
+    text-align: center !important;
     padding: 14px 8px !important;
-    min-height: 56px !important;
+    min-height: 60px !important;
     border: 2px solid var(--sd-border) !important;
     border-radius: 10px !important;
     background: var(--sd-card-bg-soft) !important;
     color: var(--sd-text) !important;
     font-size: 15px !important;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-}
-.sd-likert .gr-radio label:hover { border-color: var(--sd-accent); }
-.sd-likert .gr-radio label:has(input:checked),
-.sd-likert .gr-radio label.selected {
-    background: var(--sd-accent-bg) !important;
-    border-color: var(--sd-accent) !important;
-    color: var(--sd-text) !important;
-    font-weight: 700 !important;
+    font-weight: 500 !important;
 }
 
-/* ----- 동의/그룹 라디오, 텍스트박스, 체크박스 ----- */
-.gr-textbox textarea, .gr-textbox input, textarea, input[type="text"] {
-    background: var(--sd-card-bg-soft) !important;
-    color: var(--sd-text) !important;
-    border: 1.5px solid var(--sd-border) !important;
-    font-size: 17px !important;
-}
-.gr-textbox textarea:focus, input[type="text"]:focus {
-    border-color: var(--sd-accent) !important;
-}
-label > span, .gr-checkbox label, .gr-radio label > span {
-    color: var(--sd-text) !important;
-    font-size: 17px !important;
-}
+/* 동의 화면 안내 텍스트 강조 */
+.sd-consent-text { color: var(--sd-text) !important; font-size: 17px; line-height: 1.7; }
+.sd-consent-text h2 { font-size: 22px !important; color: var(--sd-text) !important; margin-top: 0 !important; }
+.sd-consent-text strong { color: var(--sd-accent) !important; }
+.sd-consent-text ul { margin: 12px 0; padding-left: 24px; }
+.sd-consent-text li { margin: 6px 0; color: var(--sd-text) !important; }
 
+/* radio/checkbox dot */
 input[type="radio"], input[type="checkbox"] {
     width: 22px !important;
     height: 22px !important;
     accent-color: var(--sd-accent-strong);
 }
 
-/* ----- Gradio 컴포넌트 다크 대응 ----- */
-.gradio-container .form, .gradio-container .block { background: transparent !important; border: 0 !important; }
-.gradio-container .gr-padded { padding: 0 !important; }
-
-/* ----- 모바일 ----- */
+/* 모바일 */
 @media (max-width: 768px) {
     .gradio-container { padding: 0 8px !important; }
     body, .gradio-container { font-size: 17px !important; }
@@ -712,17 +815,17 @@ input[type="radio"], input[type="checkbox"] {
     #sd-header h1 { font-size: 24px !important; }
     .sd-artwork-title { font-size: 24px !important; }
     .sd-artist { font-size: 17px !important; }
+    .sd-artwork-image { height: 320px !important; }
     .sd-likert .gr-radio,
-    .sd-likert .gr-form > div > div[role="radiogroup"] {
+    .sd-likert [role="radiogroup"] {
         grid-template-columns: repeat(2, 1fr) !important;
     }
     .sd-likert .gr-radio label { font-size: 14px !important; min-height: 52px !important; padding: 12px 6px !important; }
     button.sd-big-btn, .sd-big-btn button { font-size: 17px !important; min-height: 52px !important; }
-    .sd-artwork-image img { max-height: 360px !important; }
 }
 @media (max-width: 480px) {
     .sd-likert .gr-radio,
-    .sd-likert .gr-form > div > div[role="radiogroup"] {
+    .sd-likert [role="radiogroup"] {
         grid-template-columns: 1fr !important;
     }
 }
@@ -766,7 +869,7 @@ def render_stimulus_header(stim: dict, idx: int, total: int) -> tuple[str, str, 
         f'  <span class="sd-progress-chip" role="status" aria-live="polite">'
         f'    작품 <strong>{artwork_no}</strong> / {artwork_total}'
         f'    &nbsp;·&nbsp; 설명 <strong>{desc_no}</strong> / 3'
-        f'    &nbsp;<span style="opacity:0.75">(총 {idx + 1} / {total})</span>'
+        f'    &nbsp;<span class="sd-progress-total">(총 {idx + 1} / {total})</span>'
         f'  </span>'
         f'  <progress class="sd-progress-bar" max="{total}" value="{idx + 1}" '
         f'aria-label="전체 진행률 {idx + 1} / {total}"></progress>'
@@ -1113,19 +1216,20 @@ def debug_summary() -> str:
 # Gradio UI
 # --------------------------------------------------------------------------- #
 
-CONSENT_TEXT = """
-## SenseDocent 사용자 평가 연구
-
-본 평가는 시각장애인을 포함한 사용자가 AI 기반 명화 오디오 큐레이션을 어떻게 경험하는지
-확인하기 위한 연구입니다.
-
-참여자는 작품 설명 음성을 듣고, 각 설명에 대한 **이해도, 감각적 상상, 몰입감,
-청취 편의성, 사용 의향** 등을 평가합니다.
-
-- 수집된 응답은 **연구 목적으로만** 사용되며, 분석 시 익명화됩니다.
-- 평가 도중 **언제든 중단**할 수 있습니다.
-- 음성 청취가 가능한 조용한 환경에서 진행해 주세요.
-- 한 명의 참여자는 한 블록(약 18개 음성 자극물)을 평가합니다.
+CONSENT_HTML = """
+<div class="sd-consent-text">
+  <h2>SenseDocent 사용자 평가 연구</h2>
+  <p>본 평가는 시각장애인을 포함한 사용자가 AI 기반 명화 오디오 큐레이션을 어떻게 경험하는지
+  확인하기 위한 연구입니다.</p>
+  <p>참여자는 작품 설명 음성을 듣고, 각 설명에 대한 <strong>이해도, 감각적 상상, 몰입감,
+  청취 편의성, 사용 의향</strong> 등을 평가합니다.</p>
+  <ul>
+    <li>수집된 응답은 <strong>연구 목적으로만</strong> 사용되며, 분석 시 익명화됩니다.</li>
+    <li>평가 도중 <strong>언제든 중단</strong>할 수 있습니다.</li>
+    <li>음성 청취가 가능한 조용한 환경에서 진행해 주세요.</li>
+    <li>한 명의 참여자는 한 블록(약 18개 음성 자극물)을 평가합니다.</li>
+  </ul>
+</div>
 """
 
 EVAL_INTRO = """
@@ -1133,28 +1237,84 @@ EVAL_INTRO = """
 자유 응답(F1~F3)은 선택 입력입니다.
 """
 
-GLOBAL_INTRO = """
-## 전체 평가
-
-세 가지 설명 방식 전반에 대한 평가를 진행해주세요.
+GLOBAL_INTRO_HTML = """
+<div class="sd-consent-text">
+  <h2>전체 평가</h2>
+  <p>세 가지 설명 방식 전반에 대한 평가를 진행해주세요.</p>
+</div>
 """
 
-DONE_TEXT = """
-## 평가가 모두 완료되었습니다 🙏
-
-소중한 응답을 주셔서 감사합니다. 응답은 안전하게 저장되었습니다.
-
-본 연구 결과는 시각장애인을 위한 미술 접근성 향상에 활용될 예정입니다.
-
-문의: **연구자 이메일 (placeholder@example.com)**
+DONE_HTML = """
+<div class="sd-consent-text" style="text-align:center; padding: 24px 0;">
+  <h2 style="font-size:26px !important;">평가가 모두 완료되었습니다 🙏</h2>
+  <p>소중한 응답을 주셔서 감사합니다. 응답은 안전하게 저장되었습니다.</p>
+  <p>본 연구 결과는 시각장애인을 위한 미술 접근성 향상에 활용될 예정입니다.</p>
+  <p>문의: <strong>연구자 이메일 (placeholder@example.com)</strong></p>
+</div>
 """
+
+
+SD_THEME = gr.themes.Default(
+    primary_hue="blue",
+    secondary_hue="blue",
+    neutral_hue="slate",
+).set(
+    body_background_fill="#0f172a",
+    body_background_fill_dark="#0f172a",
+    body_text_color="#f1f5f9",
+    body_text_color_dark="#f1f5f9",
+    body_text_color_subdued="#cbd5e1",
+    body_text_color_subdued_dark="#cbd5e1",
+    background_fill_primary="#1e293b",
+    background_fill_primary_dark="#1e293b",
+    background_fill_secondary="#273449",
+    background_fill_secondary_dark="#273449",
+    border_color_primary="#334155",
+    border_color_primary_dark="#334155",
+    border_color_accent="#3b82f6",
+    block_background_fill="#1e293b",
+    block_background_fill_dark="#1e293b",
+    block_border_color="#334155",
+    block_border_color_dark="#334155",
+    block_label_text_color="#f1f5f9",
+    block_label_text_color_dark="#f1f5f9",
+    block_title_text_color="#f1f5f9",
+    block_title_text_color_dark="#f1f5f9",
+    input_background_fill="#273449",
+    input_background_fill_dark="#273449",
+    input_border_color="#334155",
+    input_border_color_dark="#334155",
+    color_accent="#60a5fa",
+    color_accent_soft="rgba(59, 130, 246, 0.2)",
+    button_primary_background_fill="#3b82f6",
+    button_primary_background_fill_dark="#3b82f6",
+    button_primary_background_fill_hover="#2563eb",
+    button_primary_text_color="#ffffff",
+    button_primary_text_color_dark="#ffffff",
+    button_secondary_background_fill="#273449",
+    button_secondary_background_fill_dark="#273449",
+    button_secondary_background_fill_hover="#334155",
+    button_secondary_text_color="#f1f5f9",
+    button_secondary_text_color_dark="#f1f5f9",
+    button_secondary_border_color="#334155",
+    button_secondary_border_color_dark="#334155",
+    checkbox_background_color="#273449",
+    checkbox_background_color_dark="#273449",
+    checkbox_background_color_selected="#3b82f6",
+    checkbox_background_color_selected_dark="#3b82f6",
+    checkbox_label_background_fill="#273449",
+    checkbox_label_background_fill_dark="#273449",
+    checkbox_label_text_color="#f1f5f9",
+    checkbox_label_text_color_dark="#f1f5f9",
+)
 
 
 with gr.Blocks(
     css=CUSTOM_CSS,
     title="SenseDocent 사용자 평가",
     analytics_enabled=False,
-    theme=gr.themes.Base(),
+    theme=SD_THEME,
+    js="() => { document.documentElement.classList.add('dark'); document.body.classList.add('dark'); }",
 ) as demo:
     state = gr.State(value=empty_state())
 
@@ -1183,7 +1343,7 @@ with gr.Blocks(
     # -----------------------------------------------------------------------
     with gr.Column(visible=True) as consent_panel:
         with gr.Column(elem_classes=["sd-card"]):
-            gr.Markdown(CONSENT_TEXT)
+            gr.HTML(CONSENT_HTML)
             participant_id_in = gr.Textbox(
                 label="참가자 ID (예: P001)",
                 placeholder="연구자가 부여한 ID 또는 임의의 식별자",
@@ -1299,7 +1459,7 @@ with gr.Blocks(
     # -----------------------------------------------------------------------
     with gr.Column(visible=False) as global_panel:
         with gr.Column(elem_classes=["sd-card"]):
-            gr.Markdown(GLOBAL_INTRO)
+            gr.HTML(GLOBAL_INTRO_HTML)
             g1 = gr.Radio(
                 choices=GLOBAL_CHOICES,
                 label="G1. 세 가지 설명 방식 중 가장 작품이 잘 상상되었던 설명은 무엇이었나요?",
@@ -1326,7 +1486,7 @@ with gr.Blocks(
     # -----------------------------------------------------------------------
     with gr.Column(visible=False) as done_panel:
         with gr.Column(elem_classes=["sd-card"]):
-            gr.Markdown(DONE_TEXT)
+            gr.HTML(DONE_HTML)
 
     # -------- 이벤트 연결 --------
     start_outputs = [
