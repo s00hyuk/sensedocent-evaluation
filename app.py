@@ -661,18 +661,29 @@ progress.sd-progress-bar::-moz-progress-bar { background: var(--sd-accent-strong
 
 /* 작품 타이틀 */
 .sd-artwork-title {
-    font-size: 30px !important;
+    font-size: 28px !important;
     font-weight: 800 !important;
     color: var(--sd-text) !important;
-    margin: 14px 0 4px 0 !important;
+    margin: 14px 0 12px 0 !important;
     letter-spacing: -0.01em;
-    line-height: 1.25;
+    line-height: 1.3;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px;
 }
-.sd-artist {
-    font-size: 19px !important;
+.sd-artwork-title .sd-title-part:first-child { color: var(--sd-text) !important; }
+.sd-artwork-title .sd-title-part:not(:first-child) {
     color: var(--sd-text-muted) !important;
-    margin: 0 0 14px 0 !important;
+    font-weight: 600 !important;
+    font-size: 22px !important;
 }
+.sd-artwork-title .sd-title-sep {
+    color: var(--sd-border) !important;
+    font-weight: 400 !important;
+    font-size: 22px !important;
+}
+
 .sd-label-chip {
     display: inline-block;
     background: var(--sd-accent-strong);
@@ -682,7 +693,22 @@ progress.sd-progress-bar::-moz-progress-bar { background: var(--sd-accent-strong
     font-weight: 700;
     font-size: 16px;
     letter-spacing: 0.02em;
+    margin-top: 2px;
 }
+
+/* 안내 박스 (매 자극물 공통) */
+.sd-instructions {
+    background: var(--sd-card-bg-soft);
+    border: 1px solid var(--sd-border);
+    border-left: 4px solid var(--sd-accent);
+    color: var(--sd-text) !important;
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-top: 16px;
+    font-size: 16px;
+    line-height: 1.65;
+}
+.sd-instructions strong { color: var(--sd-accent) !important; }
 
 /* 이미지 — 모든 작품 동일한 박스 크기 */
 .sd-artwork-image {
@@ -813,8 +839,10 @@ input[type="radio"], input[type="checkbox"] {
     body, .gradio-container { font-size: 17px !important; }
     .sd-card { padding: 16px !important; }
     #sd-header h1 { font-size: 24px !important; }
-    .sd-artwork-title { font-size: 24px !important; }
-    .sd-artist { font-size: 17px !important; }
+    .sd-artwork-title { font-size: 22px !important; }
+    .sd-artwork-title .sd-title-part:not(:first-child),
+    .sd-artwork-title .sd-title-sep { font-size: 17px !important; }
+    .sd-instructions { font-size: 15px; padding: 12px 14px; }
     .sd-artwork-image { height: 320px !important; }
     .sd-likert .gr-radio,
     .sd-likert [role="radiogroup"] {
@@ -844,16 +872,14 @@ def auto_assign_block(participant_id: str) -> str:
     return blocks[h % len(blocks)]
 
 
-def render_stimulus_header(stim: dict, idx: int, total: int) -> tuple[str, str, str, str, str]:
-    """평가 화면 상단 헤더 HTML 5종 반환.
+def render_stimulus_header(stim: dict, idx: int, total: int) -> tuple[str, str, str, str]:
+    """평가 화면 상단 헤더 HTML 4종 반환.
 
-    - progress_html: chip + progress bar (aria-live polite 영역 안에 표시됨)
-    - title_html: <h3 class="sd-artwork-title">…</h3>
-    - artist_html: <p class="sd-artist">…</p>
-    - label_html: <span class="sd-label-chip">…</span>
+    - progress_html: chip + progress bar
+    - title_html: 작품명 / 작가명 / (연도가 있으면) 제작연도 통합 타이틀
+    - label_html: <span class="sd-label-chip">설명 1/2/3</span>
     - debug_info: DEBUG_MODE 일 때만 채워짐
     """
-    # 블록 내 자극물은 작품별로 3개씩 정렬되어 있다는 전제 (get_block_stimuli 가 보장).
     artwork_total = max(total // 3, 1)
     artwork_no = idx // 3 + 1
     desc_no = idx % 3 + 1
@@ -861,7 +887,17 @@ def render_stimulus_header(stim: dict, idx: int, total: int) -> tuple[str, str, 
     title = stim.get("title", "") or "(작품명 정보 없음)"
     artist = stim.get("artist", "") or ""
     year = stim.get("artwork_year", "")
-    artist_line = artist + (f" · {year}" if year and year.lower() != "nan" else "")
+    year_clean = year if year and year.lower() != "nan" else ""
+
+    title_parts = [title]
+    if artist:
+        title_parts.append(artist)
+    if year_clean:
+        title_parts.append(f"{year_clean}")
+    combined_title = '<span class="sd-title-sep">/</span>'.join(
+        f'<span class="sd-title-part">{p}</span>' for p in title_parts
+    )
+
     blind = stim.get("blind_label", "") or "설명"
 
     progress_html = (
@@ -875,8 +911,7 @@ def render_stimulus_header(stim: dict, idx: int, total: int) -> tuple[str, str, 
         f'aria-label="전체 진행률 {idx + 1} / {total}"></progress>'
         f'</div>'
     )
-    title_html = f'<h3 class="sd-artwork-title">{title}</h3>'
-    artist_html = f'<p class="sd-artist">{artist_line}</p>' if artist_line else '<p class="sd-artist"></p>'
+    title_html = f'<h3 class="sd-artwork-title">{combined_title}</h3>'
     label_html = f'<span class="sd-label-chip">{blind}</span>'
 
     debug_info = ""
@@ -887,7 +922,7 @@ def render_stimulus_header(stim: dict, idx: int, total: int) -> tuple[str, str, 
             f"audio={stim.get('audio_file')}\n\n"
             f"script_text:\n{stim.get('script_text', '')}"
         )
-    return progress_html, title_html, artist_html, label_html, debug_info
+    return progress_html, title_html, label_html, debug_info
 
 
 def play_count_html(count: int) -> str:
@@ -969,7 +1004,7 @@ def start_evaluation(
     )
 
     stim = s.current()
-    progress, title, artist_line, blind, debug_info = render_stimulus_header(stim, 0, s.total())
+    progress, title, blind, debug_info = render_stimulus_header(stim, 0, s.total())
     audio_path, audio_warn = build_audio_state(stim)
     image_path, image_alt = build_image_state(stim)
 
@@ -980,7 +1015,7 @@ def start_evaluation(
         gr.update(visible=False),                    # global panel
         gr.update(visible=False),                    # done panel
         "",                                          # alert (clear)
-        progress, title, artist_line, blind,
+        progress, title, blind,
         gr.update(value=image_path, label=image_alt),  # image
         audio_path, audio_warn,
         play_count_html(0),                          # play count display
@@ -1003,7 +1038,6 @@ def _no_advance(state, alert: str = ""):
         alert_html,   # alert region
         gr.update(),  # progress
         gr.update(),  # title
-        gr.update(),  # artist
         gr.update(),  # blind
         gr.update(),  # image
         gr.update(),  # audio
@@ -1096,7 +1130,6 @@ def submit_response(
             "",                        # alert clear
             gr.update(),               # progress
             gr.update(),               # title
-            gr.update(),               # artist
             gr.update(),               # blind
             gr.update(value=None),     # image
             gr.update(value=None),     # audio
@@ -1110,7 +1143,7 @@ def submit_response(
 
     # 다음 자극물 표시
     next_stim = s.current()
-    progress, title, artist_line, blind, debug_info = render_stimulus_header(
+    progress, title, blind, debug_info = render_stimulus_header(
         next_stim, s.current_index, s.total()
     )
     audio_path, audio_warn = build_audio_state(next_stim)
@@ -1123,7 +1156,7 @@ def submit_response(
         gr.update(visible=False),
         gr.update(visible=False),
         "",                            # alert clear
-        progress, title, artist_line, blind,
+        progress, title, blind,
         gr.update(value=image_path, label=image_alt),
         audio_path, audio_warn,
         play_count_html(0),
@@ -1375,8 +1408,16 @@ with gr.Blocks(
         with gr.Column(elem_classes=["sd-card"]):
             progress_md = gr.HTML("")
             title_md = gr.HTML("")
-            artist_md = gr.HTML("")
             blind_md = gr.HTML("")
+
+            gr.HTML(
+                '<div class="sd-instructions" role="note">'
+                '아래 작품 이미지를 잠시 살펴보신 뒤, 같은 작품에 대한 '
+                '<strong>세 가지 버전의 음성 설명</strong>을 차례로 들어주세요. '
+                '음성을 듣고 난 뒤 아래 <strong>13개 평가 문항(1~5점)</strong>에 응답해 주시면 됩니다. '
+                '자유 응답은 선택 입력입니다.'
+                '</div>'
+            )
 
             image_display = gr.Image(
                 label="작품 이미지",
@@ -1410,13 +1451,6 @@ with gr.Blocks(
                     play_count_md = gr.HTML(play_count_html(0))
 
             debug_md = gr.Markdown("", visible=DEBUG_MODE)
-
-            gr.HTML(
-                '<p style="color:var(--sd-text-muted); font-size:15px; margin-top:14px;">'
-                "음성 설명을 들은 뒤, 아래 13개 평가 문항에 1~5점으로 응답해 주세요. "
-                "자유 응답은 선택 입력입니다."
-                "</p>"
-            )
 
         likert_inputs = []
         with gr.Column(elem_classes=["sd-card", "sd-likert"]):
@@ -1452,7 +1486,7 @@ with gr.Blocks(
                 lines=2,
             )
 
-        next_btn = gr.Button("다음 자극물로 →", variant="primary", elem_classes=["sd-big-btn"])
+        next_btn = gr.Button("다음 설명 듣기 →", variant="primary", elem_classes=["sd-big-btn"])
 
     # -----------------------------------------------------------------------
     # 화면 3: 전체 평가
@@ -1493,7 +1527,7 @@ with gr.Blocks(
         state,
         consent_panel, eval_panel, global_panel, done_panel,
         alert_md,
-        progress_md, title_md, artist_md, blind_md,
+        progress_md, title_md, blind_md,
         image_display,
         audio_player, audio_warn_md,
         play_count_md,
