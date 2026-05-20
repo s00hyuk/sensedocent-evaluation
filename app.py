@@ -16,7 +16,9 @@ SenseDocent 사용자 평가 연구용 Gradio 앱.
 from __future__ import annotations
 
 import csv
+import json
 import os
+import threading
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -340,6 +342,108 @@ def append_csv(path: Path, fieldnames: list[str], row: dict) -> None:
         # 누락된 키는 빈 문자열로
         safe_row = {k: row.get(k, "") for k in fieldnames}
         writer.writerow(safe_row)
+
+
+# --------------------------------------------------------------------------- #
+# Hugging Face Dataset repo 자동 백업
+#
+# Space 컨테이너의 /app/responses 는 휘발성이므로, 매 응답마다 별도 JSON 파일을
+# 사설(private) HF Dataset repo 에 push 한다. 파일이 응답마다 분리되므로 동시
+# 참여자 간 race condition 없음.
+#
+# 필요한 환경 변수 (HF Space → Settings → Variables and secrets):
+#   HF_TOKEN          (secret)   write 권한 access token (hf_xxxxx)
+#   HF_DATASET_REPO   (variable) ex: "s00hyuk/sensedocent-responses"
+#
+# 둘 중 하나라도 비어 있으면 자동 백업은 비활성화되고, 로컬 CSV 만 기록된다.
+# --------------------------------------------------------------------------- #
+
+HF_TOKEN = os.environ.get("HF_TOKEN", "").strip()
+HF_DATASET_REPO = os.environ.get("HF_DATASET_REPO", "").strip()
+
+_HF_API: Optional[object] = None
+_HF_API_LOCK = threading.Lock()
+_HF_REPO_READY = False
+
+
+def _get_hf_api():
+    """huggingface_hub.HfApi 를 lazy-init 으로 반환. 환경변수 미설정 시 None."""
+    global _HF_API, _HF_REPO_READY
+    if not (HF_TOKEN and HF_DATASET_REPO):
+        return None
+    if _HF_API is not None:
+        return _HF_API
+    with _HF_API_LOCK:
+        if _HF_API is not None:
+            return _HF_API
+        try:
+            from huggingface_hub import HfApi
+            api = HfApi(token=HF_TOKEN)
+            # repo 존재 확인 + private dataset 으로 생성 시도 (없으면)
+            try:
+                api.create_repo(
+                    repo_id=HF_DATASET_REPO,
+                    repo_type="dataset",
+                    private=True,
+                    exist_ok=True,
+                )
+                _HF_REPO_READY = True
+            except Exception as e:
+                print(f"[hub-backup] create_repo skipped: {e}")
+                _HF_REPO_READY = True  # 이미 있을 가능성 — upload 시도해본다
+            _HF_API = api
+            print(f"[hub-backup] enabled → {HF_DATASET_REPO}")
+            return _HF_API
+        except Exception as e:
+            print(f"[hub-backup] init failed: {e}")
+            return None
+
+
+def _safe_token(s: str) -> str:
+    """파일명에 쓸 수 있도록 안전한 토큰화."""
+    return "".join(c if c.isalnum() or c in "-_." else "_" for c in (s or ""))
+
+
+def hub_push_response(row: dict, kind: str) -> None:
+    """응답 한 건을 HF Dataset repo 에 개별 JSON 파일로 업로드.
+
+    kind:
+      - 'stimulus' → stimulus/<participant>/<participant>_<stimulus_id>_<ts>.json
+      - 'global'   → global/<participant>_<ts>.json
+
+    실패해도 평가 흐름은 막지 않는다 (로컬 CSV 에는 이미 저장됨).
+    """
+    api = _get_hf_api()
+    if api is None:
+        return
+
+    pid = _safe_token(str(row.get("participant_id", "anon")))
+    ts = _safe_token(str(row.get("timestamp", datetime.now().isoformat(timespec="seconds"))))
+
+    if kind == "stimulus":
+        stim_id = _safe_token(str(row.get("stimulus_id", "x")))
+        path_in_repo = f"stimulus/{pid}/{pid}__{stim_id}__{ts}.json"
+        commit_msg = f"stimulus: {pid} / {stim_id}"
+    else:
+        path_in_repo = f"global/{pid}__{ts}.json"
+        commit_msg = f"global: {pid}"
+
+    payload = json.dumps(row, ensure_ascii=False, indent=2).encode("utf-8")
+
+    def _do_upload():
+        try:
+            api.upload_file(
+                path_or_fileobj=payload,
+                path_in_repo=path_in_repo,
+                repo_id=HF_DATASET_REPO,
+                repo_type="dataset",
+                commit_message=commit_msg,
+            )
+        except Exception as e:
+            print(f"[hub-backup] upload failed ({path_in_repo}): {e}")
+
+    # 응답 제출 응답성을 떨어뜨리지 않도록 백그라운드 스레드로 업로드
+    threading.Thread(target=_do_upload, daemon=True).start()
 
 
 # --------------------------------------------------------------------------- #
@@ -1272,6 +1376,9 @@ def submit_response(
         gr.Warning(msg)
         return _no_advance(state, alert=msg)
 
+    # HF Dataset repo 백업 (백그라운드, 실패해도 평가 진행)
+    hub_push_response(response_row, kind="stimulus")
+
     # 다음 자극물로 이동
     s.current_index += 1
     s.audio_play_count = 0
@@ -1345,6 +1452,10 @@ def submit_global(state, g1, g2, g3, g4):
             state,
             gr.update(), gr.update(), gr.update(), gr.update(),
         )
+
+    # HF Dataset repo 백업
+    hub_push_response(global_row, kind="global")
+
     return (
         s.__dict__,
         gr.update(visible=False),
@@ -1398,8 +1509,12 @@ def debug_summary() -> str:
                     )
                 else:
                     lines.append("[DEBUG] 모든 작품 이미지 존재 확인됨")
-    lines.append(f"[DEBUG] 응답 저장 경로: {RESPONSES_CSV}")
-    lines.append(f"[DEBUG] 전체 평가 저장 경로: {GLOBAL_CSV}")
+    lines.append(f"[DEBUG] 응답 저장 경로 (로컬): {RESPONSES_CSV}")
+    lines.append(f"[DEBUG] 전체 평가 저장 경로 (로컬): {GLOBAL_CSV}")
+    if HF_TOKEN and HF_DATASET_REPO:
+        lines.append(f"[DEBUG] HF Dataset 백업: {HF_DATASET_REPO} (활성)")
+    else:
+        lines.append("[DEBUG] HF Dataset 백업: 비활성 (HF_TOKEN, HF_DATASET_REPO 미설정)")
     return "\n".join(lines)
 
 

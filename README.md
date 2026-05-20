@@ -177,6 +177,56 @@ participant_id, participant_group, block_id, timestamp,
 g1_best_imagery, g2_best_immersion, g3_best_service_use, g4_overall_comment
 ```
 
+### Hugging Face Dataset repo 자동 백업 (권장)
+
+HF Space 컨테이너의 `responses/` 폴더는 휘발성입니다 (재시작/재배포 시 소실).
+다음 두 환경변수를 설정하면 매 응답이 **사설 HF Dataset repo 에 개별 JSON 파일**로 자동 push 됩니다.
+
+| 변수 | 종류 | 예시 |
+|------|------|------|
+| `HF_TOKEN` | **Secret** (Space Settings → Variables and secrets) | `hf_xxxxxxxxxxxx` (write 권한) |
+| `HF_DATASET_REPO` | **Variable** | `s00hyuk/sensedocent-responses` |
+
+**셋업 절차**
+
+1. https://huggingface.co/new-dataset 에서 새 dataset repo 생성
+   - Owner: 본인 / Name: `sensedocent-responses` 등 / **Private** 체크
+2. https://huggingface.co/settings/tokens 에서 **write 권한 토큰** 생성
+3. Space 페이지 → **Settings** → **Variables and secrets**
+   - `HF_TOKEN` 을 **Secret** 으로 등록 (위 토큰 값)
+   - `HF_DATASET_REPO` 를 **Variable** 으로 등록 (`사용자명/repo이름`)
+4. Space 재시작 (자동) 후 동작
+
+**Dataset 파일 구조**
+
+```
+sensedocent-responses/
+├── stimulus/
+│   └── <participant_id>/
+│       └── <participant_id>__<stimulus_id>__<timestamp>.json   # 각 자극물 응답
+└── global/
+    └── <participant_id>__<timestamp>.json                       # 블록 종료 후 응답
+```
+
+각 응답이 별도 파일이라 동시 참여자가 있어도 race condition 없음.
+업로드는 백그라운드 스레드에서 처리되어 평가 응답성에 영향을 주지 않습니다.
+업로드 실패해도 로컬 CSV 에는 정상 저장되므로 데이터 유실 위험은 이중으로 막아둔 상태입니다.
+
+**분석 시 활용**
+
+본인 PC 에서:
+```bash
+git clone https://huggingface.co/datasets/<user>/sensedocent-responses
+cd sensedocent-responses
+# JSON 들을 pandas DataFrame 으로
+python3 -c "
+import json, glob, pandas as pd
+rows = [json.load(open(p, encoding='utf-8')) for p in glob.glob('stimulus/**/*.json', recursive=True)]
+df = pd.DataFrame(rows)
+print(df.head()); print(df.shape)
+"
+```
+
 ## 9. 주의사항
 
 - **condition 은 참여자에게 절대 노출하지 마세요.** 화면에는 `blind_label_for_participant`
