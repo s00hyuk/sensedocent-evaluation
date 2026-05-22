@@ -536,7 +536,7 @@ LIKERT_GROUPS = [
 ]
 
 PARTICIPANT_GROUPS = [
-    "시각장애인/저시력 사용자",
+    "시각장애인 (전맹 또는 저시력 사용자)",
     "일반 사용자",
     "미술/접근성 전문가",
     "기타",
@@ -1533,7 +1533,7 @@ CONSENT_HTML = """
     <li>수집된 응답은 <strong>연구 목적으로만</strong> 사용되며, 분석 시 익명화됩니다.</li>
     <li>평가 도중 <strong>언제든 중단</strong>할 수 있습니다.</li>
     <li>음성 청취가 가능한 조용한 환경에서 진행해 주세요.</li>
-    <li>한 명의 참여자는 한 블록(약 18개 음성 자극물)을 평가합니다.</li>
+    <li>한 명의 참여자는 <strong>6개의 그림 작품</strong>에 대해 <strong>3가지 버전의 다른 음성 설명(큐레이션)</strong>을 듣고 평가합니다.</li>
   </ul>
 </div>
 """
@@ -1651,8 +1651,9 @@ with gr.Blocks(
         with gr.Column(elem_classes=["sd-card"]):
             gr.HTML(CONSENT_HTML)
             participant_id_in = gr.Textbox(
-                label="참가자 ID (예: P001)",
-                placeholder="연구자가 부여한 ID 또는 임의의 식별자",
+                label="참가자 ID 또는 이름",
+                info="연구자가 별도로 부여한 ID가 있다면 그 ID를, 없다면 이름을 입력해 주세요.",
+                placeholder="예: P001 또는 홍길동",
                 interactive=True,
             )
             participant_group_in = gr.Radio(
