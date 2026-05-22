@@ -1023,6 +1023,41 @@ progress.sd-progress-bar::-moz-progress-bar { background: var(--sd-accent-strong
     width: 100% !important;
     max-width: 100% !important;
 }
+
+/* 동의 화면의 라디오 그룹 (사용자 그룹, 평가 블록) — 옵션 폭 균등 */
+.sd-grid-radio .gr-radio,
+.sd-grid-radio [role="radiogroup"],
+.sd-grid-radio .wrap,
+.sd-grid-radio div[data-testid="radio"] > div {
+    display: grid !important;
+    gap: 10px !important;
+    width: 100% !important;
+}
+.sd-grid-radio .gr-radio label,
+.sd-grid-radio [role="radiogroup"] label {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    justify-content: flex-start !important;
+}
+.sd-grid-radio-2 .gr-radio,
+.sd-grid-radio-2 [role="radiogroup"],
+.sd-grid-radio-2 .wrap,
+.sd-grid-radio-2 div[data-testid="radio"] > div {
+    grid-template-columns: repeat(2, 1fr) !important;
+}
+.sd-grid-radio-6 .gr-radio,
+.sd-grid-radio-6 [role="radiogroup"],
+.sd-grid-radio-6 .wrap,
+.sd-grid-radio-6 div[data-testid="radio"] > div {
+    grid-template-columns: repeat(6, 1fr) !important;
+}
+.sd-grid-radio .block,
+.sd-grid-radio .form,
+.sd-grid-radio .gr-form,
+.sd-grid-radio [data-testid="radio"] {
+    width: 100% !important;
+}
 .sd-likert .gr-radio label,
 .sd-likert [role="radiogroup"] label {
     width: 100% !important;
@@ -1109,6 +1144,14 @@ input[type="checkbox"] {
     .sd-likert label > span:first-child { font-size: 16px !important; }
     .sd-likert-group { padding: 14px !important; }
     button.sd-big-btn, .sd-big-btn button { font-size: 17px !important; min-height: 52px !important; }
+
+    /* 동의 화면 라디오 — 평가 블록 6열은 좁아지므로 3열로 wrap */
+    .sd-grid-radio-6 .gr-radio,
+    .sd-grid-radio-6 [role="radiogroup"],
+    .sd-grid-radio-6 .wrap,
+    .sd-grid-radio-6 div[data-testid="radio"] > div {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
 }
 @media (max-width: 480px) {
     .sd-likert .gr-radio,
@@ -1117,6 +1160,18 @@ input[type="checkbox"] {
     .sd-likert .form .form,
     .sd-likert div[data-testid="radio"] > div {
         grid-template-columns: 1fr !important;
+    }
+    .sd-grid-radio-2 .gr-radio,
+    .sd-grid-radio-2 [role="radiogroup"],
+    .sd-grid-radio-2 .wrap,
+    .sd-grid-radio-2 div[data-testid="radio"] > div {
+        grid-template-columns: 1fr !important;
+    }
+    .sd-grid-radio-6 .gr-radio,
+    .sd-grid-radio-6 [role="radiogroup"],
+    .sd-grid-radio-6 .wrap,
+    .sd-grid-radio-6 div[data-testid="radio"] > div {
+        grid-template-columns: repeat(2, 1fr) !important;
     }
 }
 """
@@ -1660,11 +1715,13 @@ with gr.Blocks(
                 choices=PARTICIPANT_GROUPS,
                 label="사용자 그룹",
                 value=None,
+                elem_classes=["sd-grid-radio", "sd-grid-radio-2"],
             )
             block_in = gr.Radio(
                 choices=BLOCK_CHOICES,
                 label="평가 블록 (자동 배정 권장)",
                 value="자동 배정",
+                elem_classes=["sd-grid-radio", "sd-grid-radio-6"],
             )
             consent_in = gr.Checkbox(
                 label="위 내용을 확인했으며 연구 참여에 동의합니다.",
