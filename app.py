@@ -1629,7 +1629,7 @@ CONSENT_HTML = """
     <li>수집된 응답은 <strong>연구 목적으로만</strong> 사용되며, 분석 시 익명화됩니다.</li>
     <li>평가 도중 <strong>언제든 중단</strong>할 수 있습니다.</li>
     <li>음성 청취가 가능한 조용한 환경에서 진행해 주세요.</li>
-    <li>한 명의 참여자는 <strong>6개의 그림 작품</strong>에 대해 <strong>3가지 버전의 다른 음성 설명(큐레이션)</strong>을 듣고 평가합니다.</li>
+    <li>한 명의 참여자는 <strong>3개의 그림 작품</strong>에 대해 <strong>3가지 버전의 다른 음성 설명(큐레이션)</strong>을 듣고 평가합니다.</li>
   </ul>
 </div>
 """
