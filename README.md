@@ -20,9 +20,9 @@ license: mit
 ## 1. 프로젝트 개요
 
 - 30개 명화 × 3개 설명 조건(`caption`, `docent`, `sensedocent`) = **총 90개 음성 자극물**
-- 참여자 1명은 1개 블록(A~E)을 배정받아 **18개 자극물** (6작품 × 3조건) 을 평가
+- 참여자 1명은 1개 블록(A~E)을 배정받고, 그 블록의 6작품 중 **무작위 3작품**(participant_id 기반 고정)을 배정받아 **9개 자극물** (3작품 × 3조건) 을 평가
 - 평가 항목
-  - 작품 자극물별 13개 Likert 문항(Q1~Q13)
+  - 작품 자극물별 **9개 Likert 문항(Q1~Q9)**
   - 자극물별 3개 자유응답(F1~F3)
   - 블록 종료 후 전체 평가 4문항(G1~G4)
 
@@ -161,7 +161,7 @@ MONE_005,클로드 모네,생라자르 역,Claude_Monet_18.jpg
 participant_id, participant_group, block_id, timestamp,
 stimulus_index, stimulus_id, artwork_id, artist, title,
 condition, blind_label_for_participant, audio_file,
-q1 ~ q13,
+q1 ~ q9,
 good_expression, awkward_expression, improvement_comment,
 audio_play_count, response_start_time, response_end_time, response_time_sec
 ```
@@ -237,7 +237,7 @@ print(df.head()); print(df.shape)
   - 평가 흐름이 모바일 / 키보드 / 스크린리더 환경에서도 동작하는지
 - 응답 저장은 컨테이너 휘발성을 고려하여 **Persistent Storage 또는 외부 저장소** 연동을 권장합니다.
 - 참여자가 동의 체크박스를 선택하지 않으면 평가가 시작되지 않습니다.
-- 13개 Likert 문항(Q1~Q13) 은 필수 응답, 자유응답(F1~F3) 은 선택 입력입니다.
+- 9개 Likert 문항(Q1~Q9) 은 필수 응답, 자유응답(F1~F3) 은 선택 입력입니다.
 
 ## 10. 접근성 고려
 

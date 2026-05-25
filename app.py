@@ -18,6 +18,7 @@ from __future__ import annotations
 import csv
 import json
 import os
+import random
 import threading
 import time
 import uuid
@@ -199,6 +200,37 @@ def get_block_stimuli(block_id: str) -> list[dict]:
     return stimuli
 
 
+N_ARTWORKS_PER_PARTICIPANT = 3
+
+
+def select_artworks_for_participant(
+    stimuli: list[dict], participant_id: str, n: int = N_ARTWORKS_PER_PARTICIPANT
+) -> list[dict]:
+    """블록의 작품들 중 participant_id 기반으로 결정적(deterministic) 무작위 n개 선택.
+
+    - 같은 participant_id 는 항상 같은 n개 작품을 받음 (재접속/새로고침에도 동일).
+    - 선택된 작품의 자극물들은 원래 정렬 순서(작품별 3개 조건)를 유지.
+    - 작품이 n개 이하이면 전부 반환.
+    """
+    if not stimuli:
+        return []
+
+    # 작품 ID 를 등장 순서대로 (중복 제거)
+    artwork_ids: list[str] = []
+    for s in stimuli:
+        aid = s.get("artwork_id", "")
+        if aid and aid not in artwork_ids:
+            artwork_ids.append(aid)
+
+    if len(artwork_ids) <= n:
+        return stimuli
+
+    rng = random.Random(str(participant_id))
+    chosen = set(rng.sample(artwork_ids, n))
+    # 원래 순서 유지하며 선택된 작품의 자극물만 필터
+    return [s for s in stimuli if s.get("artwork_id", "") in chosen]
+
+
 def resolve_audio_path(filename: str) -> Optional[str]:
     if not filename or filename.lower() == "nan":
         return None
@@ -308,10 +340,6 @@ RESPONSE_FIELDS = [
     "q7",
     "q8",
     "q9",
-    "q10",
-    "q11",
-    "q12",
-    "q13",
     "good_expression",
     "awkward_expression",
     "improvement_comment",
@@ -496,18 +524,16 @@ LIKERT_QUESTIONS = [
     ("q3", "Q3. 설명 속 감각 표현은 작품의 분위기와 장면을 상상하는 데 도움이 되었다."),
     ("q4", "Q4. 설명을 들으며 촉감이나 온도 같은 비시각 감각을 자연스럽게 떠올릴 수 있었다."),
     ("q5", "Q5. 설명을 들으며 작품 속 장면과 분위기에 몰입하는 느낌이 들었다."),
-    ("q6", "Q6. 설명을 통해 작품의 감정이나 분위기가 전달되었다."),
-    ("q7", "Q7. 설명의 길이와 정보량은 적절했다."),
-    ("q8", "Q8. 설명 속 표현은 이해하기 어렵거나 과도하게 복잡하지 않았다."),
-    ("q9", "Q9. 음성으로 듣기에 자연스러운 설명이었다."),
-    ("q10", "Q10. 문장의 흐름과 속도가 듣기에 편안했다."),
-    ("q11", "Q11. 이 설명 방식은 작품 감상에 도움이 되었다."),
-    ("q12", "Q12. 실제 미술관이나 전시 서비스에서 이 설명 방식을 사용하고 싶다."),
-    ("q13", "Q13. 설명을 들은 뒤 작품 장면이 머릿속에 비교적 선명하게 떠올랐다."),
+    ("q6", "Q6. 설명의 길이와 정보량은 적절했다."),
+    ("q7", "Q7. 문장의 흐름과 속도가 듣기에 편안했다."),
+    ("q8", "Q8. 이 설명 방식은 작품 감상에 도움이 되었다."),
+    ("q9", "Q9. 실제 미술관이나 전시 서비스에서 이 설명 방식을 사용하고 싶다."),
 ]
 
-# Likert 13문항을 4개 의미 그룹으로 묶어 화면 표시.
+# Likert 9문항을 4개 의미 그룹으로 묶어 화면 표시.
 # (LIKERT_QUESTIONS 순서/키 변경 금지 — 응답 CSV 컬럼 매핑이 깨짐)
+# 13문항 원안에서 Q6(감정 전달), Q8(표현 복잡도), Q9(음성 자연스러움),
+# Q13(장면 선명함)을 중복/저우선순위로 제거하고 9문항으로 재구성한 것.
 LIKERT_GROUPS = [
     {
         "title": "1. 머릿속으로 그려보기",
@@ -519,19 +545,19 @@ LIKERT_GROUPS = [
         "title": "2. 분위기와 느낌",
         "subtitle": "감각과 몰입",
         "desc": "단순한 사실 전달을 넘어, 작품의 분위기에 푹 빠져들거나 촉감·온도 같은 생생한 느낌을 받았는지 확인하는 문항입니다.",
-        "keys": ["q3", "q4", "q5", "q6"],
+        "keys": ["q3", "q4", "q5"],
     },
     {
         "title": "3. 듣기의 편안함",
         "subtitle": "설명 양과 속도",
-        "desc": "문장 표현이 너무 어렵진 않은지, 설명이 너무 길거나 짧진 않은지, 목소리 속도나 흐름이 부드러워 듣기 편했는지 확인하는 문항입니다.",
-        "keys": ["q7", "q8", "q9", "q10"],
+        "desc": "설명이 너무 길거나 짧진 않은지, 문장의 흐름과 속도가 부드러워 듣기 편했는지 확인하는 문항입니다.",
+        "keys": ["q6", "q7"],
     },
     {
         "title": "4. 종합 평가",
         "subtitle": "만족도와 추천",
-        "desc": "설명을 다 듣고 난 뒤의 최종 결론입니다. 전체적인 장면이 선명하게 기억에 남는지, 이 방식이 정말 도움이 되었고 앞으로 미술관에서 또 쓰고 싶은지 묻는 문항입니다.",
-        "keys": ["q11", "q12", "q13"],
+        "desc": "설명을 다 듣고 난 뒤의 최종 결론입니다. 이 방식이 작품 감상에 도움이 되었고 앞으로 미술관에서 또 쓰고 싶은지 묻는 문항입니다.",
+        "keys": ["q8", "q9"],
     },
 ]
 
@@ -1310,6 +1336,9 @@ def start_evaluation(
         gr.Warning(f"Block {block}에 자극물이 없습니다. CSV를 확인해주세요.")
         return _no_advance(state, alert=f"Block {block}에 자극물이 없습니다.")
 
+    # 블록의 6작품 중 participant_id 기반 고정 무작위 3작품만 평가 (작품당 3조건 = 9 자극물)
+    stimuli = select_artworks_for_participant(stimuli, pid)
+
     s = SessionState(
         participant_id=pid,
         participant_group=participant_group,
@@ -1375,15 +1404,15 @@ def mark_audio_played(state):
 
 def submit_response(
     state,
-    q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13,
+    q1, q2, q3, q4, q5, q6, q7, q8, q9,
     good_expr, awkward_expr, improvement,
 ):
     """현재 자극물 응답 제출 → 저장 후 다음 자극물 / 글로벌 단계로."""
     s = state_from_dict(state)
-    likert_vals = [q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13]
+    likert_vals = [q1, q2, q3, q4, q5, q6, q7, q8, q9]
 
     if any(v is None for v in likert_vals):
-        msg = "13개의 평가 문항(Q1~Q13)에 모두 응답해주세요."
+        msg = "9개의 평가 문항(Q1~Q9)에 모두 응답해주세요."
         gr.Warning(msg)
         return _no_advance(state, alert=msg)
 
@@ -1413,8 +1442,7 @@ def submit_response(
         "blind_label_for_participant": stim.get("blind_label", ""),
         "audio_file": stim.get("audio_file", ""),
         "q1": q1, "q2": q2, "q3": q3, "q4": q4, "q5": q5,
-        "q6": q6, "q7": q7, "q8": q8, "q9": q9, "q10": q10,
-        "q11": q11, "q12": q12, "q13": q13,
+        "q6": q6, "q7": q7, "q8": q8, "q9": q9,
         "good_expression": (good_expr or "").strip(),
         "awkward_expression": (awkward_expr or "").strip(),
         "improvement_comment": (improvement or "").strip(),
@@ -1593,11 +1621,6 @@ CONSENT_HTML = """
 </div>
 """
 
-EVAL_INTRO = """
-각 음성 설명을 들은 후, 아래 13개 평가 문항(Q1~Q13)에 1~5점으로 응답해 주세요.
-자유 응답(F1~F3)은 선택 입력입니다.
-"""
-
 GLOBAL_INTRO_HTML = """
 <div class="sd-consent-text">
   <h2>전체 평가</h2>
@@ -1746,7 +1769,7 @@ with gr.Blocks(
                 '<div class="sd-instructions" role="note">'
                 '아래 작품 이미지를 잠시 살펴보신 뒤, 같은 작품에 대한 '
                 '<strong>세 가지 버전의 음성 설명</strong>을 차례로 들어주세요. '
-                '음성을 듣고 난 뒤 아래 <strong>13개 평가 문항(1~5점)</strong>에 응답해 주시면 됩니다. '
+                '음성을 듣고 난 뒤 아래 <strong>9개 평가 문항(1~5점)</strong>에 응답해 주시면 됩니다. '
                 '자유 응답은 선택 입력입니다.'
                 '</div>'
             )
