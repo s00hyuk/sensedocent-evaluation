@@ -992,6 +992,10 @@ progress.sd-progress-bar::-moz-progress-bar { background: var(--sd-accent-strong
     font-size: 15px !important;
     margin: 0 0 18px 0 !important;
 }
+.sd-required-note {
+    color: var(--sd-warn-text) !important;
+    font-weight: 700 !important;
+}
 
 /* 4개 그룹의 sub-card */
 .sd-likert-group {
@@ -1254,7 +1258,14 @@ def render_stimulus_header(stim: dict, idx: int, total: int) -> tuple[str, str, 
         f'aria-label="전체 진행률 {idx + 1} / {total}"></progress>'
         f'</div>'
     )
-    title_html = f'<h3 class="sd-artwork-title">{combined_title}</h3>'
+    sr_caption = (
+        f'아래에 {artist + " 의 " if artist else ""}작품 "{title}" 이미지가 표시됩니다. '
+        f'이 작품에 대한 음성 설명을 듣고 평가하게 됩니다.'
+    )
+    title_html = (
+        f'<h3 class="sd-artwork-title">{combined_title}</h3>'
+        f'<p class="sd-sr-only">{sr_caption}</p>'
+    )
     label_html = f'<span class="sd-label-chip">{blind}</span>'
 
     debug_info = ""
@@ -1411,8 +1422,10 @@ def submit_response(
     s = state_from_dict(state)
     likert_vals = [q1, q2, q3, q4, q5, q6, q7, q8, q9]
 
-    if any(v is None for v in likert_vals):
-        msg = "9개의 평가 문항(Q1~Q9)에 모두 응답해주세요."
+    missing_nums = [i + 1 for i, v in enumerate(likert_vals) if v is None]
+    if missing_nums:
+        nums = ", ".join(str(n) for n in missing_nums)
+        msg = f"{nums}번 문항에 아직 응답하지 않았습니다. 9개 문항 모두 응답해 주세요."
         gr.Warning(msg)
         return _no_advance(state, alert=msg)
 
@@ -1815,7 +1828,8 @@ with gr.Blocks(
             gr.HTML(
                 '<h3 class="sd-likert-heading">아래 음성 설명에 대한 평가</h3>'
                 '<p class="sd-likert-sub">'
-                "각 문항을 읽고 1점(매우 아니다) ~ 5점(매우 그렇다) 중 가장 가까운 것을 선택해 주세요."
+                "각 문항을 읽고 1점(매우 아니다) ~ 5점(매우 그렇다) 중 가장 가까운 것을 선택해 주세요. "
+                '<strong class="sd-required-note">9개 문항 모두 필수 응답입니다.</strong>'
                 "</p>"
             )
 
